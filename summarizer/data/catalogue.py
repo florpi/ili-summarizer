@@ -70,7 +70,7 @@ class Catalogue:
             pos = pos[sorted_mass_idx][-n_halos:, :]
             vel = vel[sorted_mass_idx, :][-n_halos:, :]
         boxsize = 1000.0
-        cosmo_dict = load_params_sim(node=node)
+        cosmo_dict = load_params_sim(node=node, path_to_lhcs=path_to_lhcs)
         if los is not None:
             Omega_l = 1.0 - cosmo_dict["Omega_m"]
             Hubble = 100.0 * np.sqrt(
@@ -83,8 +83,6 @@ class Catalogue:
             redshift=redshift,
             cosmo_dict=cosmo_dict,
             boxsize=boxsize,
-            node=node,
-            los=los,
         )
 
 
