@@ -44,11 +44,9 @@ class Catalogue:
         cls,
         node: int,
         redshift: float,
+        path_to_lhcs: Path, 
         n_halos: Optional[int] = None,
         los: Optional[str] = None,
-        path_to_lhcs: Path = Path(
-            "/n/holystore01/LABS/itc_lab/Users/ccuestalazaro/quijote/"
-        ),
     ) -> "Catalogue":
         """Get a catalogue for the quijote simulations latin hyper cube
 
