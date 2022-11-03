@@ -54,7 +54,7 @@ class Catalogue:
             node (int): node to read
             redshift (float): redshift, one of 0.0, 0.5, 1.0, 2.0, 3.0
             n_halos (Optional[int], optional): Minimum halo mass to include. Defaults to None.
-            path_to_lhcs (Path, optional): Path to latin hypercube data. Defaults to Path( "/n/holystore01/LABS/itc_lab/Users/ccuestalazaro/quijote/" ).
+            path_to_lhcs (Path, optional): Path to latin hypercube data. 
 
         Returns:
             Catalogue: catalogue for simulation
