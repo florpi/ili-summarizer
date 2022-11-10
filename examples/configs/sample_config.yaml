@@ -1,0 +1,17 @@
+summarizer:
+  module: 'summarizer.two_point'
+  class: 'TPCF'
+  args: 
+    r_bins: [0.1,1.,2.]
+    n_threads: 1
+
+catalogues:
+  simulation_suite: 'quijote'
+  nodes: [0,2,]
+  args:
+    redshift: 0.5
+    path_to_lhcs: '/n/holystore01/LABS/itc_lab/Users/ccuestalazaro/quijote/latin_hypercube'
+    n_halos: 100
+
+output_path: 'test_data/'
+

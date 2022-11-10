@@ -2,7 +2,6 @@ import numpy as np
 from pathlib import Path
 from typing import List, Optional, Dict, Union
 
-from summarizer.data.quijote_utils import load_params_sim, load_sim
 
 
 class Catalogue:
@@ -13,6 +12,7 @@ class Catalogue:
         redshift: float,
         boxsize: float,
         cosmo_dict: Dict[str, float],
+        name: str,
     ):
         """Catalogue of tracers (dark matter halos, galaxies...)
 
@@ -28,6 +28,15 @@ class Catalogue:
         self.redshift = redshift
         self.boxsize = boxsize
         self.cosmo_dict = cosmo_dict
+        self.name = name
+
+    def __str__(self,)->str:
+        """get name for catalogue
+
+        Returns:
+            str: name
+        """
+        return self.name
 
     def __len__(
         self,
@@ -44,7 +53,7 @@ class Catalogue:
         cls,
         node: int,
         redshift: float,
-        path_to_lhcs: Path, 
+        path_to_lhcs: Union[Path,str], 
         n_halos: Optional[int] = None,
         los: Optional[str] = None,
     ) -> "Catalogue":
@@ -60,7 +69,9 @@ class Catalogue:
             Catalogue: catalogue for simulation
         """
         import redshift_space_library as RSL
+        from summarizer.data.quijote_utils import load_params_sim, load_sim
 
+        path_to_lhcs = Path(path_to_lhcs)
         #print(f"Reading node = {node}, with n halos = {n_halos}")
         pos, vel, mass = load_sim(
             node=node, redshift=redshift, path_to_lhcs=path_to_lhcs
@@ -83,6 +94,7 @@ class Catalogue:
             redshift=redshift,
             cosmo_dict=cosmo_dict,
             boxsize=boxsize,
+            name=f'quijote_node{node}_z{redshift:.2f}'
         )
 
 
