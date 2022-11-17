@@ -1,10 +1,14 @@
 import yaml
+import time
+import logging
 import importlib
 from typing import Optional, List, Dict
 from pathlib import Path
+from mpi4py import MPI
 from summarizer.data import Catalogue
 from summarizer.base import BaseSummary
 
+logging.basicConfig(level = logging.INFO)
 
 default_config = Path(__file__).parent.parent / "examples/configs/sample_config.yaml"
 
@@ -87,10 +91,24 @@ class SummaryRunner:
         return catalogues
 
     def __call__(
-        self,
+        self, 
     ):
         """Generate the summaries and store them to file
         """
-        for catalogue in self.catalogues:
+        t0 = time.time()
+        comm = MPI.COMM_WORLD
+        rank = comm.Get_rank()
+        size = comm.Get_size()
+        n_sims_per_core = len(self.catalogues) // size
+        if rank == size - 1:
+            catalogues = self.catalogues[rank * n_sims_per_core :]
+        else:
+            catalogues = self.catalogues[
+                rank * n_sims_per_core: (rank + 1) * n_sims_per_core 
+            ]
+        for catalogue in catalogues:
             summary = self.summarizer(catalogue)
-            self.summarizer.store_summary(self.output_path / f"{str(catalogue)}.npy", summary)
+            self.summarizer.store_summary(
+                self.output_path / f"{str(catalogue)}.npy", summary
+            )
+        logging.info(f'It took {time.time() - t0} seconds to compute all summaries')
