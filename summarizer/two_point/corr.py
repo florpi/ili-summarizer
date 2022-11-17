@@ -1,4 +1,5 @@
 import numpy as np
+import xarray as xr
 from pycorr import TwoPointCorrelationFunction
 from summarizer.data import Catalogue
 from summarizer.base import BaseSummary
@@ -17,7 +18,8 @@ class TPCF(BaseSummary):
             r_bins (np.array): bins in pair separation
             n_threads (int, optional): number of threads for each tpcf. Defaults to 1.
         """
-        self.r_bins = r_bins
+        self.r_bins = np.array(r_bins)
+        self.r = 0.5*(self.r_bins[1:] + self.r_bins[:-1])
         self.n_threads = n_threads
 
     def __call__(self, catalogue: Catalogue) -> np.array:
@@ -38,14 +40,21 @@ class TPCF(BaseSummary):
             boxsize=catalogue.boxsize,
         ).corr
 
-    def store_summary(self, filename: str, summary: np.array):
-        """Store summary to numpy file
+    def to_dataset(self, summary: np.array)->xr.DataArray:
+        """ Convert a tpcf array into an xarray dataset
+        with coordinates
 
         Args:
-            filename (str): where to store 
-            summary (np.array): summary to store
+            summary (np.array): summary to convert
+
+        Returns:
+            xr.DataArray: dataset array
         """
-        np.save(
-            filename,
+        return xr.DataArray(
             summary,
+            dims=('r'),
+            coords = {
+                'r': self.r,
+            },
         )
+

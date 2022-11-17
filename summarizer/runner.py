@@ -109,6 +109,6 @@ class SummaryRunner:
         for catalogue in catalogues:
             summary = self.summarizer(catalogue)
             self.summarizer.store_summary(
-                self.output_path / f"{str(catalogue)}.npy", summary
+                self.output_path / f"{self.summarizer.__class__.__name__}_{str(catalogue)}.npy", summary
             )
         logging.info(f'It took {time.time() - t0} seconds to compute all summaries')
