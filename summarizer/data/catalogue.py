@@ -94,7 +94,7 @@ class Catalogue:
             redshift=redshift,
             cosmo_dict=cosmo_dict,
             boxsize=boxsize,
-            name=f'quijote_node{node}_z{redshift:.2f}'
+            name=f'z_{redshift:.2f}_quijote_node{node}'
         )
 
 
