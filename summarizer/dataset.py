@@ -9,7 +9,7 @@ class Dataset:
         nodes: List[int],
         path_to_data: Path,
         root_file: str, 
-        filters: Dict,
+        filters: Dict=None,
     ):
         """Read dataset of summaries
 
