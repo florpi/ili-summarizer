@@ -9,7 +9,8 @@ class Dataset:
         nodes: List[int],
         path_to_data: Path,
         root_file: str, 
-        filters: Dict=None,
+        slice_filters: Dict=None,
+        select_filters: Dict=None,
     ):
         """Read dataset of summaries
 
@@ -17,15 +18,17 @@ class Dataset:
             nodes (List[int]): list of nodes to read 
             path_to_data (Path): path to where summaries are stored
             root_file (str): root file for summaries to be read
-            filters (Dict): dictionary of filters to apply on the summaries' coordinates
+            slice_filters (Dict): dictionary of filters to slice on the summaries' coordinates
+            select_filters (Dict): dictionary of filters to select on the summaries' coordinates
         """
         self.nodes = nodes
         self.path_to_data = path_to_data
         self.root_file = root_file
-        if filters is not None:
-            self.filters = self.transform_filters_to_slices(filters)
+        if slice_filters is not None:
+            self.slice_filters = self.transform_filters_to_slices(slice_filters)
         else:
-            self.filters = None
+            self.slice_filters = None
+        self.select_filters = select_filters
         self.summaries = self.load()
 
     def transform_filters_to_slices(self, filters: Dict)->Dict:
@@ -52,8 +55,10 @@ class Dataset:
             xr.DataArray: data array with coordinates and summary value
         """
         summary = xr.open_dataarray(self.path_to_data / f'{self.root_file}_node{node}.nc')
-        if self.filters:
-            return summary.sel(**self.filters)
+        if self.slice_filters:
+            summary = summary.sel(**self.slice_filters)
+        if self.select_filters:
+            summary = summary.sel(**self.select_filters)
         return summary
 
     def load(self,)->np.array:
