@@ -23,7 +23,7 @@ class Catalogue:
             boxsize (float): size of the simulation box
             cosmo_dict (Dict[str, float]): dictionary fo cosmological parameters
         """
-        self.pos = pos % boxsize  # Make sure PBCs
+        self.pos = pos % boxsize  
         self.vel = vel
         self.redshift = redshift
         self.boxsize = boxsize
@@ -55,7 +55,7 @@ class Catalogue:
         redshift: float,
         path_to_lhcs: Union[Path,str], 
         n_halos: Optional[int] = None,
-        los: Optional[str] = None,
+        los: Optional[int] = 2,
     ) -> "Catalogue":
         """Get a catalogue for the quijote simulations latin hyper cube
 
@@ -72,7 +72,6 @@ class Catalogue:
         from summarizer.data.quijote_utils import load_params_sim, load_sim
 
         path_to_lhcs = Path(path_to_lhcs)
-        #print(f"Reading node = {node}, with n halos = {n_halos}")
         pos, vel, mass = load_sim(
             node=node, redshift=redshift, path_to_lhcs=path_to_lhcs
         )
@@ -94,7 +93,7 @@ class Catalogue:
             redshift=redshift,
             cosmo_dict=cosmo_dict,
             boxsize=boxsize,
-            name=f'quijote_node{node}_z{redshift:.2f}'
+            name=f'z_{redshift:.2f}_quijote_node{node}'
         )
 
 
