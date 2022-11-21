@@ -55,6 +55,7 @@ class Catalogue:
         redshift: float,
         path_to_lhcs: Union[Path,str], 
         n_halos: Optional[int] = None,
+        n_density_halos: Optional[float] = None,
         los: Optional[int] = 2,
     ) -> "Catalogue":
         """Get a catalogue for the quijote simulations latin hyper cube
@@ -62,7 +63,8 @@ class Catalogue:
         Args:
             node (int): node to read
             redshift (float): redshift, one of 0.0, 0.5, 1.0, 2.0, 3.0
-            n_halos (Optional[int], optional): Minimum halo mass to include. Defaults to None.
+            n_halos (Optional[int], optional): Number of halos to include. Defaults to None.
+            n_density_halos (Optional[int], optional): Number density of halos to select. Defaults to None.
             path_to_lhcs (Path, optional): Path to latin hypercube data. 
 
         Returns:
@@ -75,11 +77,13 @@ class Catalogue:
         pos, vel, mass = load_sim(
             node=node, redshift=redshift, path_to_lhcs=path_to_lhcs
         )
+        boxsize = 1000.0
+        if n_halos is None and n_density_halos is not None:
+            n_halos = int(n_density_halos * boxsize **3)
         if n_halos is not None:
             sorted_mass_idx = np.argsort(mass)
             pos = pos[sorted_mass_idx][-n_halos:, :]
             vel = vel[sorted_mass_idx, :][-n_halos:, :]
-        boxsize = 1000.0
         cosmo_dict = load_params_sim(node=node, path_to_lhcs=path_to_lhcs)
         if los is not None:
             Omega_l = 1.0 - cosmo_dict["Omega_m"]
@@ -93,7 +97,7 @@ class Catalogue:
             redshift=redshift,
             cosmo_dict=cosmo_dict,
             boxsize=boxsize,
-            name=f'z_{redshift:.2f}_quijote_node{node}'
+            name=f'quijote_node{node}'
         )
 
 
