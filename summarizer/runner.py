@@ -11,7 +11,7 @@ from summarizer.base import BaseSummary
 logging.basicConfig(level = logging.INFO)
 
 default_config = Path(__file__).parent.parent / "examples/configs/sample_config.yaml"
-
+#TODO: When MPI, each rank should only read the catalogues it needs (reading slow)
 
 class SummaryRunner:
     def __init__(
@@ -50,10 +50,13 @@ class SummaryRunner:
             config = yaml.safe_load(fd)
         summarizer = cls.load_summarizer(config["summarizer"])
         catalogues = cls.load_catalogues(config["catalogues"])
+        output_path = Path(config['output_path'])
+        redshift = config['catalogues']['args']['redshift']
+        output_path = output_path / f"z_{redshift:.2f}"
         return cls(
             summarizer=summarizer,
             catalogues=catalogues,
-            output_path=Path(config['output_path']),
+            output_path=output_path,
         )
 
     @classmethod
@@ -86,7 +89,11 @@ class SummaryRunner:
             Catalogue, f'from_{catalogues_config["simulation_suite"]}'
         )
         catalogues = []
-        for node in catalogues_config["nodes"]:
+        if type(catalogues_config['nodes']) is str:
+            nodes = eval(catalogues_config['nodes'])
+        else:
+            nodes = catalogues_config['nodes']
+        for node in nodes:
             catalogues.append(constructor(node=node, **catalogues_config["args"]))
         return catalogues
 
@@ -109,6 +116,6 @@ class SummaryRunner:
         for catalogue in catalogues:
             summary = self.summarizer(catalogue)
             self.summarizer.store_summary(
-                self.output_path / f"{self.summarizer.__class__.__name__}_{str(catalogue)}.nc", summary
+                self.output_path / f"{str(catalogue)}.nc", summary
             )
         logging.info(f'It took {time.time() - t0} seconds to compute all summaries')

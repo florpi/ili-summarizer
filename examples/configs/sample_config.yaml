@@ -2,18 +2,18 @@ summarizer:
   module: 'summarizer.two_point'
   class: 'TPCF'
   args: 
-    r_bins: np.linspace(0.,150.,50)
+    r_bins: np.linspace(0.,150.,75)
     mu_bins: np.linspace(-1.,1.,120)
     ells: [0,2,4]
-    n_threads: 1
+    n_threads: 16
 
 catalogues:
   simulation_suite: 'quijote'
-  nodes: [0,2,]
+  nodes: range(2000)
   args:
     redshift: 0.5
     path_to_lhcs: '/n/holystore01/LABS/itc_lab/Users/ccuestalazaro/quijote/latin_hypercube'
-    n_halos: 100000
+    n_density_halos: 1.1e-4
 
-output_path: 'test_data/'
+output_path: '/n/holystore01/LABS/itc_lab/Users/ccuestalazaro/ili_summaries/summaries/tpcf/'
 
