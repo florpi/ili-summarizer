@@ -33,12 +33,10 @@ class DensitySplit(BaseSummary):
         else:
             self.r_bins = np.array(r_bins)
         self.r = 0.5*(self.r_bins[1:] + self.r_bins[:-1])
-        print('r = ', self.r_bins)
         if type(mu_bins) is str:
             self.mu_bins = eval(mu_bins)
         else:
             self.mu_bins = np.array(mu_bins)
-        print('mu = ', self.mu_bins)
         self.mu = 0.5*(self.mu_bins[1:] + self.mu_bins[:-1])
         self.ells = ells
         self.n_quantiles = n_quantiles

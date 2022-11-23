@@ -31,6 +31,9 @@ class Dataset:
         self.select_filters = select_filters
         self.summaries = self.load()
 
+    def __len__(self,)->int:
+        return len(self.nodes)
+
     def transform_filters_to_slices(self, filters: Dict)->Dict:
         """Transform a dictionary of filters into slices that select from min to max
 
