@@ -1,2 +1,2 @@
 from .corr import TPCF
-from .Pk import PKL
+from .Pk import Pk

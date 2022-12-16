@@ -6,9 +6,9 @@ import Pk_library as PKL
 import smoothing_library as SL
 from summarizer.data import Catalogue
 from summarizer.base import BaseSummary
+import ast
 
-
-class BKL(BaseSummary):
+class Bk(BaseSummary):
     def __init__(
         self,
         grid: int,
@@ -42,12 +42,18 @@ class BKL(BaseSummary):
         self.grid = grid
         self.BoxSize = BoxSize
         self.MAS = MAS
-        self.k1 = k1
-        self.k2 = k2
+        # print(k1, k2, theta)        
+        self.k1 = np.array((k1))
+        self.k2 = np.array((k2))
+
+        # self.k1 = np.array(k1)
+        # self.k2 = np.array(k2)
+        self.theta = np.array((theta))
         if type(self.theta) is float:
             self.theta = np.array([theta])
         else:
             self.theta = theta
+        
         self.reduced_bispectrum = reduced_bispectrum
         self.smooth_field = smooth_field
         self.R_smooth = R_smooth
@@ -65,7 +71,7 @@ class BKL(BaseSummary):
         """
 
         delta = np.zeros((self.grid,self.grid,self.grid), dtype=dtype)
-        pos = (catalogue.pos.T).astype(dtype)
+        pos = (catalogue.pos).astype(dtype)
         MASL.MA(pos,delta,self.BoxSize,self.MAS)
         delta /= np.mean(delta, dtype=np.float64);  delta -= 1.0
 
@@ -77,11 +83,16 @@ class BKL(BaseSummary):
         Qk_all = np.zeros((len(self.k1),len(self.k2), len(self.theta)), dtype=np.float64)        
         for i1 in range(len(self.k1)):
             for i2 in range(len(self.k2)):
-                    BBk = PKL.Bk(delta, self.BoxSize, self.k1[i1], self.k2[i2], self.theta, self.MAS, self.n_threads)
+                if i2 >= i1:
+                    BBk = PKL.Bk(delta, self.BoxSize, self.k1[i1], self.k2[i2], np.array(self.theta), self.MAS, self.n_threads)
                     Bk  = BBk.B     #bispectrum
                     Qk  = BBk.Q     #reduced bispectrum
                     Bk_all[i1,i2,:] = Bk
                     Qk_all[i1,i2,:] = Qk
+                else:
+                    Bk_all[i1,i2,:] = Bk_all[i2,i1,:]
+                    Qk_all[i1,i2,:] = Qk_all[i2,i1,:]
+
 
         return np.array([Bk_all, Qk_all])
 
@@ -110,4 +121,5 @@ class BKL(BaseSummary):
             },
             dims=["k1", "k2", "theta"],
         )
+
 
