@@ -8,7 +8,7 @@ from summarizer.data import Catalogue
 from summarizer.base import BaseSummary
 
 
-class PKL(BaseSummary):
+class Pk(BaseSummary):
     def __init__(
         self,
         grid: int,
@@ -56,7 +56,7 @@ class PKL(BaseSummary):
         """
 
         delta = np.zeros((self.grid,self.grid,self.grid), dtype=dtype)
-        pos = (catalogue.pos.T).astype(dtype)
+        pos = (catalogue.pos).astype(dtype)
         MASL.MA(pos,delta,self.BoxSize,self.MAS)
         delta /= np.mean(delta, dtype=np.float64);  delta -= 1.0
 
@@ -109,7 +109,7 @@ class PKL(BaseSummary):
             Pk0 = summary[1]
             Pk2 = summary[2]
             Pk4 = summary[3]
-            return xr.DataArray(np.array([Pk0, Pk2, Pk4]), coords=[k], dims=["k", "multipoles"])
+            return xr.DataArray(np.array([Pk0, Pk2, Pk4]).T, coords=[k,np.array([0,2,4])], dims=["k", "multipoles"])
         else:
             raise ValueError(f"mode {self.mode} not recognized")
 

@@ -1,0 +1,18 @@
+summarizer:
+  module: 'summarizer.two_point'
+  class: 'Pk'
+  args: 
+    grid: 512
+    BoxSize: 1000
+    n_threads: 16
+
+catalogues:
+  simulation_suite: 'quijote'
+  nodes: range(2000)
+  args:
+    redshift: 0.5
+    path_to_lhcs: '/global/cscratch1/sd/spandey/quijote/Halos/latin_hypercube'
+    n_density_halos: 1.1e-4
+
+output_path: '/global/cscratch1/sd/spandey/quijote/Pk/'
+
