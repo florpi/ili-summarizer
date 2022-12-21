@@ -183,7 +183,7 @@ class VPF(BaseSummary):
         )#0(ells=self.ells)
 
 
-    def to_dataset(self, summary: np.array)->xr.DataArray:
+    def to_dataset_old(self, summary: np.array)->xr.DataArray:
         """ Convert a tpcf array into an xarray dataset
         with coordinates
 
@@ -203,7 +203,7 @@ class VPF(BaseSummary):
         print(VPFs, VPFs.shape)
         final=np.stack((Radii, VPFs), axis=1)
         print(final, final.shape)
-        
+
         return xr.DataArray(
             final,
             dims=('r', 'P0s'),
@@ -211,5 +211,24 @@ class VPF(BaseSummary):
                 # 'ells': self.ells,
                 'r': Radii,
                 'P0s': VPFs,
+            },
+        )
+
+
+    def to_dataset(self, summary: np.array)->xr.DataArray:
+        """ Convert a tpcf array into an xarray dataset
+        with coordinates
+        Args:
+            summary (np.array): summary to convert
+        Returns:
+            xr.DataArray: dataset array
+        """
+        radii = [t[0] for t in summary]
+        p0 = [t[1][0] for t in summary]
+        return xr.DataArray(
+            p0,
+            dims=('r'),
+            coords = {
+                'r': radii,
             },
         )
