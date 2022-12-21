@@ -14,7 +14,7 @@ class VPF(BaseSummary):
         nbins: List[int],
         nspheres: List[int],
         boxsize: List[int],
-        numpN: int = 1,
+        numpN: int = 2,
         seed: int = 4,
         # X: List[int],
         # Y: List[int],
@@ -111,17 +111,13 @@ class VPF(BaseSummary):
         """
         if type(rmax) is str:
             self.rmax = eval(rmax)
-            print(rmax, 'string?')
         else:
             self.rmax = np.array(rmax)
-            print(rmax, 'else?')
 
         if type(nbins) is str:
             self.nbins = eval(nbins)
-            print(nbins, 'string?')
         else:
             self.nbins = np.array(nbins)
-            print(nbins, 'else?')
 
         if type(nspheres) is str:
             self.nspheres = eval(nspheres)
@@ -178,9 +174,9 @@ class VPF(BaseSummary):
             nspheres=(self.nspheres),
             numpN=(self.numpN),
             seed=(self.seed),
-            X=catalogue.pos.T[:,0],
-            Y=catalogue.pos.T[:,1],
-            Z=catalogue.pos.T[:,2],
+            X=catalogue.pos[:,0],
+            Y=catalogue.pos[:,1],
+            Z=catalogue.pos[:,2],
             max_cells_per_dim=self.max_cells_per_dim,
             periodic=True,
             boxsize=catalogue.boxsize,
@@ -202,11 +198,12 @@ class VPF(BaseSummary):
         VPFs=np.zeros(len(summary))
         for A in range(0, len(summary),1):
             Radii[A] = summary[A][0]
-            VPFs[A] = summary[A][1]
+            VPFs[A] = summary[A][1][0]
         print(Radii, Radii.shape)
         print(VPFs, VPFs.shape)
         final=np.stack((Radii, VPFs), axis=1)
         print(final, final.shape)
+        
         return xr.DataArray(
             final,
             dims=('r', 'P0s'),
