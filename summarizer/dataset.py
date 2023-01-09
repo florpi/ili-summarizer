@@ -80,7 +80,7 @@ class Dataset:
         summary = xr.open_dataarray(self.path_to_data / f'{self.root_file}_node{node}.nc')
         if self.islice_filters:
             summary = summary.isel(**self.islice_filters)
-        elif self.slice_filters:
+        if self.slice_filters:
             summary = summary.sel(**self.slice_filters)
         if self.select_filters:
             summary = summary.sel(**self.select_filters)
