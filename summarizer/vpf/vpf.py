@@ -37,6 +37,19 @@ class VPF(BaseSummary):
         theoretical 3D VPF of a random distribution, should work for both real and
         redshift space; with enough dropped spheres, the curves should be VERY
         close together.
+        Guidance for the VPF, and clustering in general, partially from Perez et
+        al 2021 section 3.3: Have at least 10,000 random points (or 50xnumber of
+        galaxies, whichever is bigger), and make sure that they're randomly distributed
+        according to the how the sample is (i.e. consider mask and completeness
+        over the area). Smallest distance scale corresponds to the density of your
+        sample; largest to the full area or volume you're covering and the precision
+        you need for the VPF (log10VPF to between -2 to 4 has been enough for most
+        of LAP's applications; for example, if you want to be able to measure the
+        VPF to a value of 1/100, you need to be able to fit at least 100 INDEPENDENT
+        circles or spheres among the area your galaxy covers; worry less about masks
+        here, just total covered area, as a good starting point). Best way to get a
+        sense of error is splitting up your sample into independent subsamples and
+        measure the VPF on them, jackknife tends to somewhat underestimate the error.
 
         Paco: halos are in kpc/h
 
