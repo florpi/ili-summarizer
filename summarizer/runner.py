@@ -2,7 +2,7 @@ import yaml
 import time
 import logging
 import importlib
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Callable
 from pathlib import Path
 from mpi4py import MPI
 from summarizer.data import Catalogue
@@ -11,13 +11,13 @@ from summarizer.base import BaseSummary
 logging.basicConfig(level = logging.INFO)
 
 default_config = Path(__file__).parent.parent / "examples/configs/sample_config.yaml"
-#TODO: When MPI, each rank should only read the catalogues it needs (reading slow)
 
 class SummaryRunner:
     def __init__(
         self,
         summarizers: List[BaseSummary],
-        catalogues: List[Catalogue],
+        catalogue_loader: Callable,
+        idx_to_load: List[int],
         output_path: Path,
     ):
         """Class to generate summaries from arrays of simulated data
@@ -28,7 +28,8 @@ class SummaryRunner:
             output_path (Path): path where to store outputs
         """
         self.summarizers = summarizers
-        self.catalogues = catalogues
+        self.catalogue_loader = catalogue_loader 
+        self.idx_to_load = idx_to_load
         self.output_path = output_path
         for summarizer in self.summarizers:
             summary_path = self.output_path / summarizer.__str__()
@@ -51,13 +52,17 @@ class SummaryRunner:
         with open(config_path, "r") as fd:
             config = yaml.safe_load(fd)
         summarizers = cls.load_summarizers(config["summarizers"])
-        catalogues = cls.load_catalogues(config["catalogues"])
+        catalogue_loader = cls.load_catalogue_loader(config["catalogues"])
+        idx_to_load = config["catalogues"]["idx_to_load"]
+        if type(idx_to_load) is str:
+            idx_to_load = eval(idx_to_load)
         output_path = Path(config['output_path'])
         redshift = config['catalogues']['args']['redshift']
         output_path = output_path / f"z_{redshift:.2f}"
         return cls(
             summarizers=summarizers,
-            catalogues=catalogues,
+            catalogue_loader=catalogue_loader,
+            idx_to_load=idx_to_load,
             output_path=output_path,
         )
 
@@ -93,26 +98,19 @@ class SummaryRunner:
         )(**summarizer_config["args"])
 
     @classmethod
-    def load_catalogues(cls, catalogues_config: Dict)->List[Catalogue]:
+    def load_catalogue_loader(cls, catalogues_config: Dict)->List[Catalogue]:
         """load simulated catalogues from config file
 
         Args:
             catalogues_config (Dict): dictionary with the configuration for the summarizer 
 
         Returns:
-            catalogues (List[Catalogue]): list of catalogues
+            Callable: function that loads the catalogues given an index
         """
         constructor = getattr(
             Catalogue, f'from_{catalogues_config["simulation_suite"]}'
         )
-        catalogues = []
-        if type(catalogues_config['nodes']) is str:
-            nodes = eval(catalogues_config['nodes'])
-        else:
-            nodes = catalogues_config['nodes']
-        for node in nodes:
-            catalogues.append(constructor(node=node, **catalogues_config["args"]))
-        return catalogues
+        return lambda idx: constructor(idx, **catalogues_config["args"])
 
     def __call__(
         self, 
@@ -123,14 +121,15 @@ class SummaryRunner:
         comm = MPI.COMM_WORLD
         rank = comm.Get_rank()
         size = comm.Get_size()
-        n_sims_per_core = len(self.catalogues) // size
+        n_sims_per_core = len(self.idx_to_load) // size
         if rank == size - 1:
-            catalogues = self.catalogues[rank * n_sims_per_core :]
+            idx_per_core = self.idx_to_load[rank * n_sims_per_core :]
         else:
-            catalogues = self.catalogues[
+            idx_per_core = self.idx_to_load[
                 rank * n_sims_per_core: (rank + 1) * n_sims_per_core 
             ]
-        for catalogue in catalogues:
+        for idx in idx_per_core:
+            catalogue = self.catalogue_loader(idx)
             for summarizer in self.summarizers:
                 summary = summarizer(catalogue)
                 summarizer.store_summary(
