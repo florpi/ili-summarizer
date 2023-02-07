@@ -112,7 +112,7 @@ class Catalogue:
             nblab.ArrayCatalog: nbodykit catalogue 
         """
         if weights is not None:
-            data =  {'Position': self.pos, 'Weights': weights}, 
+            data =  {'Position': self.pos, 'Weights': weights} 
         else:
             data = {'Position': self.pos}
         return nblab.ArrayCatalog(
