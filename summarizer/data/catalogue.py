@@ -62,6 +62,8 @@ class Catalogue:
         n_halos: Optional[int] = None,
         n_density_halos: Optional[float] = None,
         los: Optional[int] = 2,
+        mesh: bool = True,
+        n_mesh: Optional[int] = 360,
     ) -> "Catalogue":
         """Get a catalogue for the quijote simulations latin hyper cube
 
@@ -71,6 +73,8 @@ class Catalogue:
             n_halos (Optional[int], optional): Number of halos to include. Defaults to None.
             n_density_halos (Optional[int], optional): Number density of halos to select. Defaults to None.
             path_to_lhcs (Path, optional): Path to latin hypercube data. 
+            mesh (bool, optional): whether to create a mesh. Defaults to True.
+            n_mesh (Optional[int], optional): number of cells in the mesh. Defaults to 50.
 
         Returns:
             Catalogue: catalogue for simulation
@@ -102,7 +106,9 @@ class Catalogue:
             redshift=redshift,
             cosmo_dict=cosmo_dict,
             boxsize=boxsize,
-            name=f'quijote_node{node}'
+            name=f'quijote_node{node}',
+            mesh=mesh,
+            n_mesh=n_mesh,
         )
     
     def to_nbodykit_catalogue(self,weights=None)->nblab.ArrayCatalog:

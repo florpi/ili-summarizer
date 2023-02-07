@@ -1,17 +1,51 @@
 summarizers:
-- module: 'summarizer.two_point'
-  class: 'TwoPCF'
-  args: 
-    r_bins: np.linspace(0.,150.,75)
-    mu_bins: np.linspace(-1.,1.,120)
+- module: 'summarizer'
+  class: 'CiC'
+  args:
+    r_max: 40.
+    n_bins: 25
+    n_spheres: 1_000_000
+    num_pN: 250
+
+- module: 'summarizer'
+  class: 'DensitySplit'
+  args:
+    smoothing_radius: 15.
+    n_quantiles: 5
+    r_bins: np.linspace(0.,150.,50)
+    mu_bins: np.linspace(-1.,1.,210)
     ells: [0,2,4]
     n_threads: 16
-- module: 'summarizer.two_point'
+ 
+- module: 'summarizer'
+  class: 'kNN'
+  args:
+    r_bins: np.linspace(0.01,50.,25)
+    k: np.arange(1,21)
+    n_threads: 16
+
+- module: 'summarizer'
+  class: 'TwoPCF'
+  args: 
+    r_bins: np.linspace(0.,150.,50)
+    mu_bins: np.linspace(-1.,1.,210)
+    ells: [0,2,4]
+    n_threads: 16
+
+- module: 'summarizer'
   class: 'Pk'
   args: 
     n_grid: 360
     dk: 0.005
     ells: [0,2,4]
+
+- module: 'summarizer'
+  class: 'Mk'
+  args: 
+    n_grid: 360
+    dk: 0.005
+    ells: [0,2,4]
+
 
 
 catalogues:
@@ -21,6 +55,7 @@ catalogues:
     redshift: 0.5
     path_to_lhcs: '/n/holystore01/LABS/itc_lab/Users/ccuestalazaro/quijote/latin_hypercube'
     n_density_halos: 1.1e-4
+    n_mesh: 360
 
 output_path: '/n/holystore01/LABS/itc_lab/Users/ccuestalazaro/ili_summaries/multiple_summaries/'
 
