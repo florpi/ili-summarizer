@@ -95,6 +95,6 @@ class Dataset:
         summaries = []
         for node in self.nodes:
             summaries.append(
-                self.load_summary(node=node).to_numpy()
+                np.array(self.load_summary(node=node))
             )
         return np.array(summaries)
