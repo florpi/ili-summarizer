@@ -11,7 +11,6 @@ from summarizer.base import BaseSummary
 logging.basicConfig(level = logging.INFO)
 
 default_config = Path(__file__).parent.parent / "examples/configs/sample_config.yaml"
-#TODO: When MPI, each rank should only read the catalogues it needs (reading slow)
 
 class SummaryRunner:
     def __init__(
