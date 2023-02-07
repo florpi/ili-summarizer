@@ -18,6 +18,15 @@ class BaseSummary(ABC):
         return
 
     @abstractmethod
+    def __str__(self,)->str:
+        """ String representation of the summary
+
+        Returns:
+            str: name 
+        """
+        return
+
+    @abstractmethod
     def to_dataset(self, summary: np.array)->xr.DataArray:
         """Convert numpy array into xarray dataset with coordinates and dimensions
 

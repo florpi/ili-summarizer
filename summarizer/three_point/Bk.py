@@ -59,6 +59,9 @@ class Bk(BaseSummary):
         self.Filter = Filter
         self.n_threads = n_threads
 
+    def __str__(self,):
+        return 'Bk'
+
     def __call__(self, catalogue: Catalogue, dtype=np.float32) -> np.array:
         """ Given a catalogue, compute its Bispectrum
         Args:

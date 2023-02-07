@@ -28,6 +28,9 @@ class KNN(BaseSummary):
         else:
             self.k = np.array(k)
         self.n_threads = n_threads
+    
+    def __str__(self,):
+        return 'knn'
 
     def __call__(self, catalogue: Catalogue) -> np.array:
         """ Given a catalogue, compute its knn statistics

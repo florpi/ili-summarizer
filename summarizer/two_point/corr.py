@@ -36,6 +36,9 @@ class TwoPCF(BaseSummary):
         self.ells = ells
         self.n_threads = n_threads
 
+    def __str__(self,):
+        return 'twopcf'
+
     def __call__(self, catalogue: Catalogue) -> np.array:
         """ Given a catalogue, compute its two point correlation function
 

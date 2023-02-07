@@ -40,6 +40,9 @@ class Mk(BaseSummary):
         self.dk = dk
         self.ells = ells
         self.LOS = LOS
+
+    def __str__(self,):
+        return 'mk'
     
     def get_mark(self, delta: np.array,)->np.array:
         """ Given the tracer's environment ```delta''', compute the mark function.
