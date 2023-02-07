@@ -1,8 +1,7 @@
 import numpy as np
 from pathlib import Path
 from typing import List, Optional, Dict, Union
-
-
+import nbodykit.lab as nblab 
 
 class Catalogue:
     def __init__(
@@ -13,6 +12,8 @@ class Catalogue:
         boxsize: float,
         cosmo_dict: Dict[str, float],
         name: str,
+        mesh: bool = True,
+        n_mesh: Optional[int] = 50,
     ):
         """Catalogue of tracers (dark matter halos, galaxies...)
 
@@ -22,6 +23,8 @@ class Catalogue:
             redshift (float): redshift of the catalogue
             boxsize (float): size of the simulation box
             cosmo_dict (Dict[str, float]): dictionary fo cosmological parameters
+            mesh (bool, optional): whether to create a mesh. Defaults to True.
+            n_mesh (Optional[int], optional): number of cells in the mesh. Defaults to 50.
         """
         self.pos = pos % boxsize  
         self.vel = vel
@@ -29,6 +32,8 @@ class Catalogue:
         self.boxsize = boxsize
         self.cosmo_dict = cosmo_dict
         self.name = name
+        if mesh:
+            self.mesh = self.to_mesh(n_mesh=n_mesh)
 
     def __str__(self,)->str:
         """get name for catalogue
@@ -99,6 +104,32 @@ class Catalogue:
             boxsize=boxsize,
             name=f'quijote_node{node}'
         )
+    
+    def to_nbodykit_catalogue(self,)->nblab.ArrayCatalog:
+        """ Get a nbodykit catalogue from the catalogue
 
+        Returns:
+            nblab.ArrayCatalog: nbodykit catalogue 
+        """
+        return nblab.ArrayCatalog(
+                {'Position': self.pos}, 
+                BoxSize=self.boxsize, 
+                dtype=np.float32, 
+        ) 
 
+    def to_mesh(self, n_mesh: int, resampler: str = "tsc") -> np.array:
+        """Get a mesh from the catalogue
+
+        Args:
+            n_mesh (int): number of cells in the mesh
+            resampler (str, optional): resampler to use. Defaults to "tsc".
+
+        Returns:
+            np.array: mesh
+        """
+        nblab_cat = self.to_nbodykit_catalogue()
+        return nblab_cat.to_mesh(
+            Nmesh=n_mesh, 
+            resampler=resampler
+        )
 
