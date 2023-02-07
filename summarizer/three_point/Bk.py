@@ -25,7 +25,6 @@ class Bk(BaseSummary):
     ):
         """Compute three point bispectrum (in fourier space),
         using Pylians
-
         Args:
             grid (int): compute the density field on a regular grid with grid x grid x grid voxels
             BoxSize (float): Size of the periodic box. The units of the output power spectrum depend on this.
@@ -62,10 +61,8 @@ class Bk(BaseSummary):
 
     def __call__(self, catalogue: Catalogue, dtype=np.float32) -> np.array:
         """ Given a catalogue, compute its Bispectrum
-
         Args:
             catalogue (Catalogue):  catalogue to summarize
-
         Returns:
             np.array: 
         """
@@ -100,10 +97,8 @@ class Bk(BaseSummary):
     def to_dataset(self, summary: np.array)->xr.DataArray:
         """ Convert a Bispectrum into an xarray dataset
         with coordinates
-
         Args:
             summary (np.array): summary to convert
-
         Returns:
             xr.DataArray: dataset array
         """
@@ -121,5 +116,3 @@ class Bk(BaseSummary):
             },
             dims=["k1", "k2", "theta"],
         )
-
-
