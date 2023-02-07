@@ -6,7 +6,7 @@ from summarizer.data import Catalogue
 from summarizer.base import BaseSummary
 
 
-class TPCF(BaseSummary):
+class 2PCF(BaseSummary):
     def __init__(
         self,
         r_bins: Union[str, List],
