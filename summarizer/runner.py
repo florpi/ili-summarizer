@@ -30,8 +30,10 @@ class SummaryRunner:
         self.summarizers = summarizers
         self.catalogues = catalogues
         self.output_path = output_path
-        if self.output_path is not None:
-            self.output_path.mkdir(parents=True, exist_ok=True)
+        for summarizer in self.summarizers:
+            summary_path = self.output_path / summarizer.__str__()
+            if summary_path is not None:
+                summary_path.mkdir(parents=True, exist_ok=True)
 
     @classmethod
     def from_config(
@@ -48,7 +50,7 @@ class SummaryRunner:
         """
         with open(config_path, "r") as fd:
             config = yaml.safe_load(fd)
-        summarizers = cls.load_summarizers(config["summarizer"])
+        summarizers = cls.load_summarizers(config["summarizers"])
         catalogues = cls.load_catalogues(config["catalogues"])
         output_path = Path(config['output_path'])
         redshift = config['catalogues']['args']['redshift']

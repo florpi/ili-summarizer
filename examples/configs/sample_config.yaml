@@ -1,13 +1,12 @@
 summarizers:
-  - module: 'summarizer.two_point'
+- module: 'summarizer.two_point'
   class: 'TwoPCF'
   args: 
     r_bins: np.linspace(0.,150.,75)
     mu_bins: np.linspace(-1.,1.,120)
     ells: [0,2,4]
     n_threads: 16
-
-  - module: 'summarizer.two_point'
+- module: 'summarizer.two_point'
   class: 'Pk'
   args: 
     n_grid: 360
