@@ -3,7 +3,7 @@ import xarray as xr
 from typing import List, Union
 from densitysplit.pipeline import DensitySplit as DensitySplitSummary
 from pycorr import TwoPointCorrelationFunction
-from nbodykitlab.fitlers import Gaussian
+from nbodykit.filters import Gaussian
 
 from summarizer.data import Catalogue
 from summarizer.base import BaseSummary
@@ -58,10 +58,11 @@ class DensitySplit(BaseSummary):
         random_points = np.random.uniform(
             0, catalogue.boxsize, (5 * len(catalogue.pos), 3)
         )
+        ds.sampling_positions = random_points
         ds.density = compute_overdensity(
             eval_positions = random_points,
             filter= Gaussian(self.smoothing_radius),
-            tracer_mesh=catalogue.mesh
+            tracers_mesh=catalogue.mesh
         )
         quantiles = ds.get_quantiles(
             nquantiles=self.n_quantiles,
