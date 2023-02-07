@@ -18,7 +18,7 @@ summarizers:
     n_threads: 16
  
 - module: 'summarizer'
-  class: 'kNN'
+  class: 'KNN'
   args:
     r_bins: np.linspace(0.01,50.,25)
     k: np.arange(1,21)
