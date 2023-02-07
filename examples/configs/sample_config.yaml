@@ -50,7 +50,7 @@ summarizers:
 
 catalogues:
   simulation_suite: 'quijote'
-  nodes: range(2)
+  idx_to_load: range(2)
   args:
     redshift: 0.5
     path_to_lhcs: '/n/holystore01/LABS/itc_lab/Users/ccuestalazaro/quijote/latin_hypercube'
