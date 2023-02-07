@@ -12,6 +12,8 @@ class Catalogue:
         boxsize: float,
         cosmo_dict: Dict[str, float],
         name: str,
+        mesh: bool = True,
+        n_mesh: Optional[int] = 50,
     ):
         """Catalogue of tracers (dark matter halos, galaxies...)
 
@@ -21,6 +23,8 @@ class Catalogue:
             redshift (float): redshift of the catalogue
             boxsize (float): size of the simulation box
             cosmo_dict (Dict[str, float]): dictionary fo cosmological parameters
+            mesh (bool, optional): whether to create a mesh. Defaults to True.
+            n_mesh (Optional[int], optional): number of cells in the mesh. Defaults to 50.
         """
         self.pos = pos % boxsize  
         self.vel = vel
@@ -28,6 +32,8 @@ class Catalogue:
         self.boxsize = boxsize
         self.cosmo_dict = cosmo_dict
         self.name = name
+        if mesh:
+            self.mesh = self.to_mesh(n_mesh=n_mesh)
 
     def __str__(self,)->str:
         """get name for catalogue
