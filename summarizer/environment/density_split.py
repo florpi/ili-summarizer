@@ -3,9 +3,11 @@ import xarray as xr
 from typing import List, Union
 from densitysplit.pipeline import DensitySplit as DensitySplitSummary
 from pycorr import TwoPointCorrelationFunction
+from nbodykitlab.fitlers import Gaussian
 
 from summarizer.data import Catalogue
 from summarizer.base import BaseSummary
+from summarizer.utils import compute_overdensity
 
 
 class DensitySplit(BaseSummary):
@@ -15,7 +17,7 @@ class DensitySplit(BaseSummary):
         mu_bins: Union[str, List],
         ells: List[int],
         n_quantiles: int = 5,
-        smoothing_radius: float = 20.0,
+        smoothing_radius: float = 15.0,
         n_threads: int = 1,
     ):
         """Compute density split statistics for a catalogue of tracers.
@@ -56,14 +58,14 @@ class DensitySplit(BaseSummary):
         random_points = np.random.uniform(
             0, catalogue.boxsize, (5 * len(catalogue.pos), 3)
         )
-        density = ds.get_density(
-            smooth_radius=self.smoothing_radius,
-            cellsize=self.smoothing_radius / 4,
-            sampling_positions=random_points,
+        ds.density = compute_overdensity(
+            eval_positions = random_points,
+            filter= Gaussian(self.smoothing_radius),
+            tracer_mesh=catalogue.mesh
         )
-        quantiles, mean_density = ds.get_quantiles(
+        quantiles = ds.get_quantiles(
             nquantiles=self.n_quantiles,
-            return_density=True,
+            return_density=False,
         )
         cross_correlations = []
         for i in range(self.n_quantiles):
