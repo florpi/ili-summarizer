@@ -1,9 +1,6 @@
 import numpy as np
 import xarray as xr
-from typing import List, Union
-import MAS_library as MASL
-import Pk_library as PKL
-import smoothing_library as SL
+from typing import List 
 from summarizer.data import Catalogue
 from summarizer.base import BaseSummary
 from nbodykit.algorithms.fftpower import FFTPower
