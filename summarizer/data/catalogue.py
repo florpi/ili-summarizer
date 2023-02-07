@@ -13,7 +13,7 @@ class Catalogue:
         cosmo_dict: Dict[str, float],
         name: str,
         mesh: bool = True,
-        n_mesh: Optional[int] = 50,
+        n_mesh: Optional[int] = 360,
     ):
         """Catalogue of tracers (dark matter halos, galaxies...)
 
