@@ -105,19 +105,23 @@ class Catalogue:
             name=f'quijote_node{node}'
         )
     
-    def to_nbodykit_catalogue(self,)->nblab.ArrayCatalog:
+    def to_nbodykit_catalogue(self,weights=None)->nblab.ArrayCatalog:
         """ Get a nbodykit catalogue from the catalogue
 
         Returns:
             nblab.ArrayCatalog: nbodykit catalogue 
         """
+        if weights is not None:
+            data =  {'Position': self.pos, 'Weights': weights}, 
+        else:
+            data = {'Position': self.pos}
         return nblab.ArrayCatalog(
-                {'Position': self.pos}, 
+                data,
                 BoxSize=self.boxsize, 
                 dtype=np.float32, 
         ) 
 
-    def to_mesh(self, n_mesh: int, resampler: str = "tsc") -> np.array:
+    def to_mesh(self, n_mesh: int, resampler: str = "tsc", weights=None,) -> np.array:
         """Get a mesh from the catalogue
 
         Args:
@@ -127,9 +131,16 @@ class Catalogue:
         Returns:
             np.array: mesh
         """
-        nblab_cat = self.to_nbodykit_catalogue()
+        nblab_cat = self.to_nbodykit_catalogue(weights=weights)
+        if weights is not None:
+            return nblab_cat.to_mesh(
+                Nmesh=n_mesh, 
+                resampler=resampler,
+                weight='Weights'
+            )
         return nblab_cat.to_mesh(
             Nmesh=n_mesh, 
-            resampler=resampler
+            resampler=resampler,
         )
+
 
