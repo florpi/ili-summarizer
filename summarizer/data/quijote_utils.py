@@ -24,8 +24,7 @@ def load_sim(
     """
     snapshot_dict = {0.0: 4, 0.5: 3, 1.0: 2, 2.0: 1, 3.0: 0}
     FoF = readfof.FoF_catalog(
-        # str(path_to_lhcs / f"{node}/"), #this is how Carolina had her version
-        str(path_to_lhcs),
+        str(path_to_lhcs / f"{node}/"), 
         snapshot_dict[redshift],
         long_ids=False,
         swap=False,
@@ -37,23 +36,22 @@ def load_sim(
     mass = FoF.GroupMass * 1e10
     return pos, vel, mass
 
-# Carolina had this coded in but it is apparnetly not necessary
-# def load_params_sim(
-#     node: int,
-#     path_to_lhcs: Path,
-# ) -> Dict[str, float]:
-#     """Read the cosmological parameters of the node
-#
-#     Args:
-#         node (int): node to read
-#         path_to_lhcs (Optional[Path], optional): path to latin hypercubes.
-#
-#     Returns:
-#         Dict[str, float]: dictionary of cosmological parametesr
-#     """
-#
-#     return (
-#         pd.read_csv(path_to_lhcs/ "latin_hypercube_params.txt", delimiter=r"\s+")
-#         .iloc[node]
-#         .to_dict()
-#     )
+def load_params_sim(
+    node: int,
+    path_to_lhcs: Path,
+) -> Dict[str, float]:
+    """Read the cosmological parameters of the node
+
+    Args:
+        node (int): node to read
+        path_to_lhcs (Optional[Path], optional): path to latin hypercubes.
+
+    Returns:
+        Dict[str, float]: dictionary of cosmological parametesr
+    """
+
+    return (
+        pd.read_csv(path_to_lhcs/ "latin_hypercube_params.txt", delimiter=r"\s+")
+        .iloc[node]
+        .to_dict()
+    )
