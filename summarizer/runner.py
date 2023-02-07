@@ -16,7 +16,7 @@ default_config = Path(__file__).parent.parent / "examples/configs/sample_config.
 class SummaryRunner:
     def __init__(
         self,
-        summarizer: BaseSummary,
+        summarizers: List[BaseSummary],
         catalogues: List[Catalogue],
         output_path: Path,
     ):
@@ -27,7 +27,7 @@ class SummaryRunner:
             catalogues (List[Catalogue]): list of data catalogues
             output_path (Path): path where to store outputs
         """
-        self.summarizer = summarizer
+        self.summarizers = summarizers
         self.catalogues = catalogues
         self.output_path = output_path
         if self.output_path is not None:
@@ -48,16 +48,31 @@ class SummaryRunner:
         """
         with open(config_path, "r") as fd:
             config = yaml.safe_load(fd)
-        summarizer = cls.load_summarizer(config["summarizer"])
+        summarizers = cls.load_summarizers(config["summarizer"])
         catalogues = cls.load_catalogues(config["catalogues"])
         output_path = Path(config['output_path'])
         redshift = config['catalogues']['args']['redshift']
         output_path = output_path / f"z_{redshift:.2f}"
         return cls(
-            summarizer=summarizer,
+            summarizers=summarizers,
             catalogues=catalogues,
             output_path=output_path,
         )
+
+    @classmethod
+    def load_summarizers(cls, summarizer_config: List[Dict])->List[BaseSummary]:
+        """Load the right summarizers, according to config file
+
+        Args:
+            summarizer_config (List[Dict]): list of dictionaries with the configuration of each summarizer
+
+        Returns:
+            summarizers (List[BaseSummary]): the summarizers of choice
+        """
+        summarizers = []
+        for config in summarizer_config:
+            summarizers.append(cls.load_summarizer(config))
+        return summarizers
 
     @classmethod
     def load_summarizer(cls, summarizer_config: Dict)->BaseSummary:
@@ -114,8 +129,9 @@ class SummaryRunner:
                 rank * n_sims_per_core: (rank + 1) * n_sims_per_core 
             ]
         for catalogue in catalogues:
-            summary = self.summarizer(catalogue)
-            self.summarizer.store_summary(
-                self.output_path / f"{str(catalogue)}.nc", summary
-            )
+            for summarizer in self.summarizers:
+                summary = summarizer(catalogue)
+                summarizer.store_summary(
+                    self.output_path / f"{str(summarizer)}/{str(catalogue)}.nc", summary
+                )
         logging.info(f'It took {time.time() - t0} seconds to compute all summaries')

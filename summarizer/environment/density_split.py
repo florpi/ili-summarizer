@@ -45,6 +45,9 @@ class DensitySplit(BaseSummary):
         self.smoothing_radius = smoothing_radius
         self.n_threads = n_threads
 
+    def __str__(self,):
+        return 'density_split'
+
     def __call__(self, catalogue: Catalogue) -> np.array:
         """Given a catalogue, compute the density split statistics
 

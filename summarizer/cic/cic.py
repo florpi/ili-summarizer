@@ -41,6 +41,9 @@ class CiC(BaseSummary):
         self.num_pN = num_pN
         self.random_seed = random_seed
         self.max_cells_per_dim = max_cells_per_dim    
+
+    def __str__(self,):
+        return 'cic'
         
     def __call__(self, catalogue: Catalogue) -> np.array:
         """ Given a catalogue, compute CiC up to numpN for a set of 

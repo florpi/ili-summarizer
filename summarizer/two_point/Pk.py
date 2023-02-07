@@ -28,6 +28,9 @@ class Pk(BaseSummary):
         self.ells = ells
         self.LOS = LOS
 
+    def __str__(self,):
+        return 'pk'
+
     def __call__(
         self,
         catalogue: Catalogue,
