@@ -21,4 +21,3 @@ def test__load_summary_with_filters():
     )
     summary = ds.load_summary(node=0)
     assert len(summary.values) == 1
-

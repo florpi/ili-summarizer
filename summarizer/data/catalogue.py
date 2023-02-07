@@ -1,8 +1,7 @@
 import numpy as np
 from pathlib import Path
 from typing import List, Optional, Dict, Union
-
-
+import nbodykit.lab as nblab 
 
 class Catalogue:
     def __init__(
@@ -99,6 +98,32 @@ class Catalogue:
             boxsize=boxsize,
             name=f'quijote_node{node}'
         )
+    
+    def to_nbodykit_catalogue(self,)->nblab.ArrayCatalog:
+        """ Get a nbodykit catalogue from the catalogue
 
+        Returns:
+            nblab.ArrayCatalog: nbodykit catalogue 
+        """
+        return nblab.ArrayCatalog(
+                {'Position': self.pos}, 
+                BoxSize=self.boxsize, 
+                dtype=np.float32, 
+        ) 
 
+    def to_mesh(self, n_mesh: int, resampler: str = "tsc") -> np.array:
+        """Get a mesh from the catalogue
+
+        Args:
+            n_mesh (int): number of cells in the mesh
+            resampler (str, optional): resampler to use. Defaults to "tsc".
+
+        Returns:
+            np.array: mesh
+        """
+        nblab_cat = self.to_nbodykit_catalogue()
+        return nblab_cat.to_mesh(
+            Nmesh=n_mesh, 
+            resampler=resampler
+        )
 
