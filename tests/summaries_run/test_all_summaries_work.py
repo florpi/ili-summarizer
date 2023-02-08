@@ -65,12 +65,13 @@ def test_run_cic(catalogue):
 
 def test_run_bk(catalogue):
     bk_runner = Bk(
-        grid=100,
+        n_grid=360,
         BoxSize = catalogue.boxsize,
-        k1 = [0.1,0.5,0.7],
-        k2 = [0.1,0.5,0.7],
-        theta = [0.1,0.5,0.7],
+        kmin = 0.01,  
+        kmax = 1.,
+        dk = 0.05
     )
     bk = bk_runner(catalogue=catalogue)
     bk = bk_runner.to_dataset(bk)
-    assert bk.values.shape == (3,3,3)
+    assert bk.values.shape == (19,4)
+  
