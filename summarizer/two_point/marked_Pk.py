@@ -88,8 +88,9 @@ class Mk(BaseSummary):
         pks = []
         for ell in self.ells:
             multipole = pk_moments.poles[f"power_{ell}"].real
-            if ell == 0:
-                multipole -= pk_moments.attrs["shotnoise"]
+            #if ell == 0:
+            #    multipole -= pk_moments.attrs["shotnoise"]
+            # Issue with multiple shotnoise 
             pks.append(multipole)
         pks.append(k)
         return np.vstack(pks)    

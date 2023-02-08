@@ -9,6 +9,8 @@ from summarizer.data import Catalogue
 from summarizer.base import BaseSummary
 from summarizer.utils import compute_overdensity
 
+from pandas import qcut
+
 
 class DensitySplit(BaseSummary):
     def __init__(
