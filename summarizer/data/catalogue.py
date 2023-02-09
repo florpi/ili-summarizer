@@ -125,7 +125,7 @@ class Catalogue:
                 data,
                 BoxSize=self.boxsize, 
                 dtype=np.float32, 
-        ) 
+            ) 
 
     def to_mesh(self, n_mesh: int, resampler: str = "tsc", weights=None,) -> np.array:
         """Get a mesh from the catalogue
@@ -137,7 +137,9 @@ class Catalogue:
         Returns:
             np.array: mesh
         """
-        nblab_cat = self.to_nbodykit_catalogue(weights=weights)
+        nblab_cat = self.to_nbodykit_catalogue(
+            weights=weights
+        )
         if weights is not None:
             return nblab_cat.to_mesh(
                 Nmesh=n_mesh, 

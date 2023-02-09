@@ -1,16 +1,13 @@
 import numpy as np
 import xarray as xr
 from typing import List, Union
-from densitysplit.pipeline import DensitySplit as DensitySplitSummary
 from pycorr import TwoPointCorrelationFunction
 from nbodykit.filters import Gaussian
+from pandas import qcut
 
 from summarizer.data import Catalogue
 from summarizer.base import BaseSummary
 from summarizer.utils import compute_overdensity
-
-from pandas import qcut
-
 
 class DensitySplit(BaseSummary):
     def __init__(
@@ -50,6 +47,23 @@ class DensitySplit(BaseSummary):
     def __str__(self,):
         return 'density_split'
 
+    def get_quantiles(self, sampling_positions: np.array, density: np.array, n_quantiles: int) -> List[np.array]:
+        """ Split the sampling positions according to their local density into
+        a number of quantiles
+
+        Args:
+            sampling_positions (np.array): random positions 
+            density (np.array): density around random positions 
+            n_quantiles (int): number of quantiles to split the sample into 
+
+        Returns:
+            List[np.array]: list of random positions in each quantile 
+        """
+        quantiles_idx = qcut(density, n_quantiles, labels=False)
+        return [
+            sampling_positions[quantiles_idx == i] for i in range(n_quantiles)
+        ]
+
     def __call__(self, catalogue: Catalogue) -> np.array:
         """Given a catalogue, compute the density split statistics
 
@@ -59,19 +73,18 @@ class DensitySplit(BaseSummary):
         Returns:
             np.array: density split statistics
         """
-        ds = DensitySplitSummary(catalogue.pos, catalogue.boxsize,)
         random_points = np.random.uniform(
-            0, catalogue.boxsize, (5 * len(catalogue.pos), 3)
+            0, catalogue.boxsize, (self.n_quantiles * len(catalogue.pos), 3)
         )
-        ds.sampling_positions = random_points
-        ds.density = compute_overdensity(
+        density = compute_overdensity(
             eval_positions = random_points,
             filter= Gaussian(self.smoothing_radius),
             tracers_mesh=catalogue.mesh
         )
-        quantiles = ds.get_quantiles(
-            nquantiles=self.n_quantiles,
-            return_density=False,
+        quantiles = self.get_quantiles(
+            sampling_positions=random_points,
+            density=density,
+            n_quantiles=self.n_quantiles,
         )
         cross_correlations = []
         for i in range(self.n_quantiles):

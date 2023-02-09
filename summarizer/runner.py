@@ -110,6 +110,7 @@ class SummaryRunner:
         constructor = getattr(
             Catalogue, f'from_{catalogues_config["simulation_suite"]}'
         )
+        print(catalogues_config['args'])
         return lambda idx: constructor(idx, **catalogues_config["args"])
 
     def __call__(
