@@ -21,8 +21,7 @@ import itertools
 
 import nbodykit.lab as nbk
 import nbodykit.algorithms.fftpower as nbkfftpower
-from nbodykit import setup_logging, style, CurrentMPIComm
-from nbodykit.meshtools import SlabIterator
+from nbodykit import CurrentMPIComm
 from pmesh.pm import ParticleMesh, RealField, ComplexField
 from pmesh.window import Affine
 
@@ -193,37 +192,7 @@ def field_subbox_slice(field,bounds):
     elif ndim == 3:
         return nbk.ArrayMesh(field[np.ix_(ci[0],ci[1],ci[2])],BoxSize=box_size)
     
-    
-# def SubboxBoundIterator(Lbox,N_per_axis):
-#     '''
-#     Iterator for looping through N_per_axis^3 subregions of a cubical box 
-#     with side length Lbox. The syntax for using is:
-    
-#     for b in SubboxBoundIterator(1000,2):
-#         do_something(b)
-        
-#     The format of b is ((xmin,xmax),(ymin,ymax),(zmin,zmax))
-#     '''
-#     dL = Lbox/N_per_axis
-    
-#     for i in range(N_per_axis):
-#         for j in range(N_per_axis):
-#             for k in range(N_per_axis):
-#                 yield ( (i*dL,(i+1)*dL) , (j*dL,(j+1)*dL) , (k*dL,(k+1)*dL) )
-
-
-# def number_field(box_size,
-#                  n_mesh,
-#                  kmin,
-#                  kmax):
-#     '''
-#     For a Fourier grid specified by box_size and n_mesh, return
-#     the inverse FFT of a grid with ones where the k vector norm
-#     is between kmin and kmax, and zeros elsewhere
-#     '''
-#     return k_field(box_size,n_mesh,kmin,kmax,0.)
-
-
+ 
 def k_field(box_size,
             n_mesh,
             kmin,

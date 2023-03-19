@@ -12,6 +12,7 @@ class Catalogue:
         boxsize: float,
         cosmo_dict: Dict[str, float],
         name: str,
+        mass: Optional[np.array] = None,
         mesh: bool = True,
         n_mesh: Optional[int] = 360,
     ):
@@ -28,6 +29,7 @@ class Catalogue:
         """
         self.pos = pos % boxsize  
         self.vel = vel
+        self.mass = mass
         self.redshift = redshift
         self.boxsize = boxsize
         self.cosmo_dict = cosmo_dict
@@ -79,7 +81,6 @@ class Catalogue:
         Returns:
             Catalogue: catalogue for simulation
         """
-        import redshift_space_library as RSL
         from summarizer.data.quijote_utils import load_params_sim, load_sim
 
         path_to_lhcs = Path(path_to_lhcs)
@@ -92,6 +93,7 @@ class Catalogue:
         if n_halos is not None:
             sorted_mass_idx = np.argsort(mass)
             pos = pos[sorted_mass_idx][-n_halos:, :]
+            mass = mass[sorted_mass_idx][-n_halos:]
             vel = vel[sorted_mass_idx, :][-n_halos:, :]
         cosmo_dict = load_params_sim(node=node, path_to_lhcs=path_to_lhcs)
         if los is not None:
@@ -99,7 +101,8 @@ class Catalogue:
             Hubble = 100.0 * np.sqrt(
                 cosmo_dict["Omega_m"] * (1.0 + redshift) ** 3 + Omega_l
             )
-            RSL.pos_redshift_space(pos, vel, boxsize, Hubble, redshift, axis=los)
+            rsd_factor = (1.0 + redshift)/Hubble
+            pos[:, los] = pos[:, los] + vel[:, los] * rsd_factor
         return cls(
             pos=pos,
             vel=vel,
@@ -107,6 +110,7 @@ class Catalogue:
             cosmo_dict=cosmo_dict,
             boxsize=boxsize,
             name=f'quijote_node{node}',
+            mass=mass,
             mesh=mesh,
             n_mesh=n_mesh,
         )
@@ -118,14 +122,34 @@ class Catalogue:
             nblab.ArrayCatalog: nbodykit catalogue 
         """
         if weights is not None:
-            data =  {'Position': self.pos, 'Weights': weights} 
+            data =  {'Position': self.pos, 'Weights': weights, 'Mass': self.mass, 'Velocity': self.vel} 
         else:
-            data = {'Position': self.pos}
+            data =  {'Position': self.pos, 'Mass': self.mass, 'Velocity': self.vel} 
         return nblab.ArrayCatalog(
                 data,
                 BoxSize=self.boxsize, 
                 dtype=np.float32, 
             ) 
+
+    def to_nbodykit_halo_catalogue(self,)->nblab.HaloCatalog:
+        """ Get a nbodykit catalogue from the catalogue
+
+        Returns:
+            nblab.ArrayCatalog: nbodykit catalogue 
+        """
+        cat = self.to_nbodykit_catalogue()
+        Mnu = self.cosmo_dict['Mnu'] if 'Mnu' in self.cosmo_dict else 0.0
+        cosmo = nblab.cosmology.Planck15.clone(
+            h=self.cosmo_dict['h'], 
+            Omega0_b=self.cosmo_dict['Omega_b'], 
+            Omega0_cdm=self.cosmo_dict['Omega_m'] - self.cosmo_dict['Omega_b'],
+            m_ncdm=[None, Mnu][Mnu>0.],
+            n_s=self.cosmo_dict['n_s'],
+        ) 
+        return nblab.HaloCatalog(
+            cat, cosmo=cosmo, redshift=self.redshift, mdef='vir',
+        ) 
+
 
     def to_mesh(self, n_mesh: int, resampler: str = "tsc", weights=None,) -> np.array:
         """Get a mesh from the catalogue

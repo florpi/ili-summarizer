@@ -3,10 +3,8 @@ import xarray as xr
 from typing import List 
 from summarizer.data import Catalogue
 from summarizer.base import BaseSummary
-from nbodykit.algorithms.fftpower import FFTPower
 import sys, os
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-import bskit_main as bskit
+import summarizer.three_point.bskit_main as bskit
 
 class Bk(BaseSummary):
     def __init__(
@@ -120,9 +118,8 @@ class Bk(BaseSummary):
         end_i = num_k_bins
         fftb.measure_bispectrum(imin=start_i,imax=end_i,verbose=0,meas_type=self.meas_type)
         Bk_obj_fftb = fftb.b
-        save_data = np.array([Bk_obj_fftb['k_mean'][:,0],Bk_obj_fftb['k_mean'][:,1],Bk_obj_fftb['k_mean'][:,2],
+        return np.array([Bk_obj_fftb['k_mean'][:,0],Bk_obj_fftb['k_mean'][:,1],Bk_obj_fftb['k_mean'][:,2],
                         Bk_obj_fftb['B']]).T
-        return save_data
 
     def to_dataset(self, summary: np.array) -> xr.DataArray:
         """Convert a power spectrum array into an xarray dataset

@@ -3,4 +3,5 @@ from .knn import KNN
 from .two_point import TwoPCF, Pk, Mk
 from .three_point import Bk
 from .environment import DensitySplit
+from .wavelet import WST
 
