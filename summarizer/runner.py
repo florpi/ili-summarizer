@@ -4,7 +4,6 @@ import logging
 import importlib
 from typing import Optional, List, Dict, Callable
 from pathlib import Path
-from mpi4py import MPI
 from summarizer.data import Catalogue
 from summarizer.base import BaseSummary
 
@@ -21,6 +20,7 @@ class SummaryRunner:
         output_path: Path,
         idx_to_load: List[int] = None,
         path_to_data: Optional[Path] = None,
+        dont_overwrite: bool = True,
     ):
         """Class to generate summaries from arrays of simulated data
 
@@ -31,6 +31,7 @@ class SummaryRunner:
             idx_to_load (Optional[List[int]], optional): indices of catalogues to load,
             if None it will load all in path_to_data. Defaults to None.
             path_to_data (Optional[Path], optional): path to data. Defaults to None.
+            dont_overwrite (bool, optional): if True, will not overwrite existing files.
         """
         self.summarizers = summarizers
         self.catalogue_loader = catalogue_loader
@@ -46,6 +47,7 @@ class SummaryRunner:
             summary_path = self.output_path / summarizer.__str__()
             if summary_path is not None:
                 summary_path.mkdir(parents=True, exist_ok=True)
+        self.dont_overwrite = dont_overwrite
 
     @classmethod
     def from_config(
@@ -131,6 +133,7 @@ class SummaryRunner:
         self,
     ):
         """Generate the summaries and store them to file"""
+        from mpi4py import MPI
         t0 = time.time()
         comm = MPI.COMM_WORLD
         rank = comm.Get_rank()
@@ -143,9 +146,14 @@ class SummaryRunner:
                 rank * n_sims_per_core : (rank + 1) * n_sims_per_core
             ]
         for idx in idx_per_core:
-            print('loading = ', idx)
             catalogue = self.catalogue_loader(idx)
             for summarizer in self.summarizers:
+                if self.dont_overwrite:
+                    if (self.output_path / f"{str(summarizer)}/{str(catalogue)}.nc").exists():
+                        logging.info(
+                            f"Skipping {str(catalogue)} with {str(summarizer)} because it already exists"
+                        )
+                        continue
                 summary = summarizer(catalogue)
                 summarizer.store_summary(
                     self.output_path / f"{str(summarizer)}/{str(catalogue)}.nc", summary

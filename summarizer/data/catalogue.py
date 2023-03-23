@@ -115,7 +115,7 @@ class Catalogue:
             n_mesh=n_mesh,
         )
     
-    def to_nbodykit_catalogue(self,weights=None)->nblab.ArrayCatalog:
+    def to_nbodykit_catalogue(self,weights=None)->"nblab.ArrayCatalog":
         """ Get a nbodykit catalogue from the catalogue
 
         Returns:
@@ -131,7 +131,7 @@ class Catalogue:
                 dtype=np.float32, 
             ) 
 
-    def to_nbodykit_halo_catalogue(self,)->nblab.HaloCatalog:
+    def to_nbodykit_halo_catalogue(self,)->"nblab.HaloCatalog":
         """ Get a nbodykit catalogue from the catalogue
 
         Returns:

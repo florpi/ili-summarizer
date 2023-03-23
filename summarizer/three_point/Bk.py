@@ -77,7 +77,7 @@ class Bk(BaseSummary):
         self.triangle_type = triangle_type
 
     def __str__(self,):
-        return 'pk'
+        return 'bk'
 
     def __call__(
         self,
