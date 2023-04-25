@@ -15,7 +15,7 @@ class Pk(BaseSummary):
         LOS: List[int] = [0, 0, 1],
     ):
         """Compute two point power spectrum (in fourier space),
-        using Pylians
+        using nbodykit
 
         Args:
             n_grid (int): compute the density field on a regular grid with grid x grid x grid voxels
