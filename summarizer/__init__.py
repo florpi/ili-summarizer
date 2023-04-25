@@ -29,4 +29,4 @@ except ModuleNotFoundError:
     notfound.append('kymatio')
 
 if len(notfound)>0:
-    print(f"Running without the following backends:{','.join(notfound)}")
+    print(f"Running without the following backends due to ModuleNotFoundError: {', '.join(notfound)}")
