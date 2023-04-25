@@ -10,7 +10,6 @@ Next, install ili-summarizer from this repository using pip with the editable fl
 ```bash
     pip install -e 'ili-summarizer[backends]'
 ```
-The backends flag ensures 
 
 ## Verify installation
 
