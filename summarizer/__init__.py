@@ -29,4 +29,5 @@ except ModuleNotFoundError:
     notfound.append('kymatio')
 
 if len(notfound)>0:
-    print(f"Running without the following backends due to ModuleNotFoundError: {', '.join(notfound)}")
+    import warnings
+    warnings.warn(f"Running without the following backends due to ModuleNotFoundError: {', '.join(notfound)}")
