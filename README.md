@@ -1,18 +1,31 @@
-# ltu-ili
+# ili-summarizer
 
-The [Simons Collaboration on Learning the Universe](https://www.learning-the-universe.org/) Implicit Likelihood Inference (LtU-ILI) pipeline is a framework for applying simulation-based inference methods to constrain posteriors on cosmological parameters using astronomical survey data. The code is currently built to analyze spectroscopic surveys of the universe's Large-Scale Structure (LSS), such as SDSS-BOSS.
+This is a python package which consolidates tools for constructing summary statistics from spectroscopic surveys of the universe's Large-Scale Structure (LSS). It is built to support the [Learning the Universe Implicit Likelihood Inference (LtU-ILI) pipeline](https://github.com/maho3/ltu-ili). 
 
-## Documentation
-The documentation for this project can be found [at this link](https://ltu-ili.readthedocs.io/en/latest/)
+## Fuctionality
+Currently, ili-summarizer supports summary statistic calculation with halo count fields. The available statistics include:
+* Two-point statistics
+    * [Two point correlation function](summarizer/two_point/corr.py)
+    * [Power spectrum](summarizer/two_point/Pk.py)
+    * [Marked power spectrum](summarizer/two_point/marked_Pk.py)
+* Three-point statistics
+    * [Bispectrum](summarizer/three_point/Bk.py)
+* Wavelet statistics
+    * [Wavelet scattering transform coefficients](summarizer/wavelet/wst.py)
+* Nearest Neighbor statistics
+    * [kNN](summarizer/knn/knn.py)
+* Environment Satistics
+    * [Density Split](summarizer/environment/density_split.py)
+* Void Statistics
+    * [VPF](summarizer/vpf/vpf.py)
+    * [CiC](summarizer/cic/cic.py)
+
 
 ## Installing 
 Follow the instructions detailed in [INSTALL.md](INSTALL.md).
 
-## Contributing
-Before contributing, please familiarize yourself with the contribution workflow described in [CONTRIBUTING.md](CONTRIBUTING.md).
-
 ## Contact
-If you have comments, questions, or feedback, please [write us an issue](https://github.com/maho3/ltu-ili/issues). The current leads of the LtU ILI working group are Benjamin Wandelt (benwandelt@gmail.com) and Matthew Ho (matthew.annam.ho@gmail.com)
+If you have comments, questions, or feedback, please [write us an issue](https://github.com/florpi/ili-summarizer/issues). You can also contact Carolina Cuesta (cuestalz@mit.edu) or Matthew Ho (matthew.annam.ho@gmail.com).
 
 ## Contributors
 Below is a list of contributors to this repository. (Please add your name here!)
@@ -20,5 +33,5 @@ Below is a list of contributors to this repository. (Please add your name here!)
 * [Deaglan Bartlett](https://github.com/DeaglanBartlett) (IAP)
 
 ## Acknowledgements
-This work was supported by the Simons Collaboration on "Learning the Universe".
+This work was supported by the [Simons Collaboration on "Learning the Universe"](https://www.learning-the-universe.org/).
 

@@ -2,40 +2,31 @@
 
 
 ## Basic installation
-
-Here is a quick guide for getting started with the ltu-ili framework.
-
-First, clone the main branch of the ltu-ili repository onto your local machine.
+First, clone the main branch of the ili-summarizer repository onto your local machine.
 ```bash
-    git clone git@github.com:maho3/ltu-ili.git
-    cd ltu-ili
+    git clone git@github.com:florpi/ili-summarizer.git
 ```
-Next, setup your environment to support the required dependencies for ltu-ili. ltu-ili requires a Python version >=3.7. The list of required modules is given in [requirements.txt](requirements.txt). There are two ways to install these, either using an environment manager such as [conda](https://docs.anaconda.com/) or the default Python installer pip. While we recommend the former, we give instructions for both methods.
-### pip
-1. Ensure that your Python version is >=3.7. If not, [install the appropriate version](https://www.python.org/downloads/).
+Next, install ili-summarizer from this repository using pip with the editable flag. This ensures that any changes to the ili-summarizer directory are actively reflected in your python kernels.
 ```bash
-    python --version
-```
-2. Ensure that your pip is at the latest version.
-```bash
-    pip install --upgrade pip
-```
-3. Install all packages within [requirements.txt](requirements.txt).
-```bash
-    pip install -r requirements.txt
+    pip install -e 'ili-summarizer[backends]'
 ```
 
-### conda
-1. Ensure that you have anaconda3 installed by following its [installation instructions](https://docs.anaconda.com/anaconda/install/index.html).
-2. Create a new virtual environment with a Python version >=3.7. For example,
+## Verify installation
+
+TODO
+
+## Alternative installations
+ili-summarizer consolidates the usage of [several backend packages](setup.cfg#L16) to calculate various summary statistics. Dependent on your development environment, dependancy conflicts of these packages may be difficult to resolve (the most problematic is [nbodykit](https://nbodykit.readthedocs.io/en/latest/getting-started/install.html#conda-installation)). We provide example installations with specific configurations which install. Experience on different systems may vary...
+
+### Without backends
+In the case where you only want to use ili-summarizer for its dataloading functionality (e.g. as a dependency of ltu-ili), we've provided an installation option which does not install any conflicting backends. Instead of the `pip install` command in the Basic Installation, use:
 ```bash
-    conda create --name myenv python=3.9
+    pip install -e ili-summarizer
 ```
-3. Activate the newly created environment.
-```bash
-    conda activate myenv
-```
-4. Install all packages within [requirements.txt](requirements.txt) into your environment.
-```bash
-    conda install --file requirements.txt
-```
+This will allow you to use ili-summarizer to load previously-calculated summary statistics but will prevent you from calcuating any new statistics with each respective backend. However, you can also use this installation option as a blank canvas to install a subset of the backends which you find necessary for your work.
+
+### MacOS Monterey 12.6, Macbook Air, Apple M2
+TODO
+
+### Rocky Linux 8.7 / Redhat (infinity@IAP)
+TODO
