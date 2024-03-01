@@ -36,9 +36,10 @@ class WST(BaseSummary):
         self.L_3d = L_3d
         self.integral_powers = integral_powers
         self.sigma = sigma
+        self.n_mesh = n_mesh
         self.S = HarmonicScattering3D(
             J=self.J_3d,
-            shape=(n_mesh, n_mesh, n_mesh,),
+            shape=(self.n_mesh, self.n_mesh, self.n_mesh,),
             L=self.L_3d,
             sigma_0=self.sigma,
             integral_powers=self.integral_powers,
@@ -82,7 +83,7 @@ class WST(BaseSummary):
         s0_batch = torch.from_numpy(test_shape)
         integr = TorchBackend3D.compute_integrals(s0_batch, self.integral_powers)
         s0 = integr.cpu().numpy()[0, 0]
-        return np.hstack((s0, s_mat_avg))
+        return np.hstack((s0, s_mat_avg))/self.n_mesh**3
 
     def to_dataset(self, summary: np.array) -> xr.DataArray:
         """Convert a wst array into an xarray dataset

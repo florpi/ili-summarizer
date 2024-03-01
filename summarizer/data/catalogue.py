@@ -1,7 +1,10 @@
 import numpy as np
 from pathlib import Path
 from typing import List, Optional, Dict, Union
-import nbodykit.lab as nblab 
+try:
+    import nbodykit.lab as nblab 
+except ModuleNotFoundError:
+    pass
 
 class Catalogue:
     def __init__(
