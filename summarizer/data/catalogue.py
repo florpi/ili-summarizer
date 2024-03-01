@@ -115,6 +115,48 @@ class Catalogue:
             n_mesh=n_mesh,
         )
     
+    @classmethod
+    def from_ascii(
+        cls,
+        filename, 
+        boxsize=1000.,
+        cosmo_dict = {'Omega_m': 0.3175, 'Omega_b': 0.049, 'h':0.6711,  'ns': 0.9624, 'sigma8': 0.834},
+        name=None,
+        redshift: float = 0.,
+        los: Optional[int] = 2,
+        mesh: bool = True,
+        n_mesh: Optional[int] = 360,
+        min_halo_mass = 1.e12,
+    ):
+
+        import pandas as pd
+        df = pd.read_csv(filename, skiprows=range(1,19), header=0, sep=' ')
+        pos = np.array(df[['x', 'y', 'z']])
+        vel = np.array(df[['vx', 'vy', 'vz']])
+        mass = np.array(df['m200c'])
+        if min_halo_mass is not None:
+            pos = pos[mass>min_halo_mass]
+            vel = vel[mass>min_halo_mass]
+            mass = mass[mass>min_halo_mass]
+        if los is not None:
+            Omega_l = 1.0 - cosmo_dict["Omega_m"]
+            Hubble = 100.0 * np.sqrt(
+                cosmo_dict["Omega_m"] * (1.0 + redshift) ** 3 + Omega_l
+            )
+            rsd_factor = (1.0 + redshift)/Hubble
+            pos[:, los] = pos[:, los] + vel[:, los] * rsd_factor
+        return cls(
+            pos=pos,
+            vel=vel,
+            mass=mass,
+            redshift=redshift,
+            cosmo_dict=cosmo_dict,
+            name=name,
+            mesh=mesh,
+            n_mesh=n_mesh,
+            boxsize=boxsize,
+        )
+    
     def to_nbodykit_catalogue(self,weights=None)->"nblab.ArrayCatalog":
         """ Get a nbodykit catalogue from the catalogue
 

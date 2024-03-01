@@ -34,6 +34,7 @@ class Pk(BaseSummary):
     def __call__(
         self,
         catalogue: Catalogue,
+        return_dataset: bool = False,
     ) -> np.array:
         """Given a catalogue, compute its power spectrum
 
@@ -71,7 +72,10 @@ class Pk(BaseSummary):
                 multipole -= pk_moments.attrs["shotnoise"]
             pks.append(multipole)
         pks.append(k)
-        return np.vstack(pks)
+        pks = np.vstack(pks)
+        if return_dataset:
+            return self.to_dataset(pks)
+        return pks
 
     def to_dataset(self, summary: np.array) -> xr.DataArray:
         """Convert a power spectrum array into an xarray dataset

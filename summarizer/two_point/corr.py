@@ -39,7 +39,7 @@ class TwoPCF(BaseSummary):
     def __str__(self,):
         return 'twopcf'
 
-    def __call__(self, catalogue: Catalogue) -> np.array:
+    def __call__(self, catalogue: Catalogue, return_dataset: bool =False,) -> np.array:
         """ Given a catalogue, compute its two point correlation function
 
         Args:
@@ -48,7 +48,7 @@ class TwoPCF(BaseSummary):
         Returns:
             np.array: two-point correlation function
         """
-        return TwoPointCorrelationFunction(
+        tpcf = TwoPointCorrelationFunction(
             "smu",
             edges=(self.r_bins, self.mu_bins),
             data_positions1=catalogue.pos.T,
@@ -57,6 +57,9 @@ class TwoPCF(BaseSummary):
             boxsize=catalogue.boxsize,
             los='z',
         )(ells=self.ells)
+        if return_dataset:
+            return self.to_dataset(tpcf)
+        return tpcf
 
     def to_dataset(self, summary: np.array)->xr.DataArray:
         """ Convert a tpcf array into an xarray dataset
