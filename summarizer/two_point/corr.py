@@ -2,7 +2,7 @@ import numpy as np
 import xarray as xr
 from typing import List, Union
 from pycorr import TwoPointCorrelationFunction
-from summarizer.data import Catalogue
+from summarizer.data import BoxCatalogue, SurveyCatalogue
 from summarizer.base import BaseSummary
 
 
@@ -39,7 +39,7 @@ class TwoPCF(BaseSummary):
     def __str__(self,):
         return 'twopcf'
 
-    def __call__(self, catalogue: Catalogue, return_dataset: bool =False,) -> np.array:
+    def __call__(self, catalogue: Union[SurveyCatalogue, BoxCatalogue], return_dataset: bool =False,) -> np.array:
         """ Given a catalogue, compute its two point correlation function
 
         Args:
@@ -48,15 +48,32 @@ class TwoPCF(BaseSummary):
         Returns:
             np.array: two-point correlation function
         """
-        tpcf = TwoPointCorrelationFunction(
-            "smu",
-            edges=(self.r_bins, self.mu_bins),
-            data_positions1=catalogue.pos.T,
-            engine="corrfunc",
-            n_threads=self.n_threads,
-            boxsize=catalogue.boxsize,
-            los='z',
-        )(ells=self.ells)
+        if catalogue.is_periodic_box:
+            tpcf = TwoPointCorrelationFunction(
+                "smu",
+                edges=(self.r_bins, self.mu_bins),
+                data_positions1=catalogue.galaxies_pos,
+                data_weights1=catalogue.weights,
+                engine="corrfunc",
+                n_threads=self.n_threads,
+                boxsize=catalogue.boxsize,
+                position_type='pos',
+                los='z',
+            )(ells=self.ells)
+        else:
+            tpcf = TwoPointCorrelationFunction(
+                "smu",
+                edges=(self.r_bins, self.mu_bins),
+                data_positions1=catalogue.galaxies_pos,
+                data_weights1=catalogue.weights,
+                randoms_positions1=catalogue.randoms_pos,
+                engine="corrfunc",
+                n_threads=self.n_threads,
+                boxsize=catalogue.boxsize,
+                position_type='pos',
+                los='z',
+            )(ells=self.ells)
+
         if return_dataset:
             return self.to_dataset(tpcf)
         return tpcf

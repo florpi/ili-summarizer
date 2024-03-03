@@ -45,7 +45,7 @@ class KNN(BaseSummary):
         random_pos = catalogue.boxsize*np.random.uniform(size=(len(catalogue), 3))
         return get_CDFkNN(
             r_bins=self.r_bins,
-            pos = catalogue.pos,
+            pos = catalogue.galaxies_pos,
             random_pos = random_pos,
             boxsize=catalogue.boxsize,
             k=self.k,

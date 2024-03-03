@@ -1,1 +1,1 @@
-from .catalogue import Catalogue
+from .catalogue import BoxCatalogue, SurveyCatalogue

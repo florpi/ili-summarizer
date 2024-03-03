@@ -1,10 +1,11 @@
 import numpy as np
 import xarray as xr
-from typing import List 
+from typing import List
 from summarizer.data import Catalogue
 from summarizer.base import BaseSummary
 import sys, os
 import summarizer.three_point.bskit_main as bskit
+
 
 class Bk(BaseSummary):
     def __init__(
@@ -12,17 +13,17 @@ class Bk(BaseSummary):
         n_grid: int = 360,
         BoxSize: float = 1000,
         kmin: float = 0.01,
-        kmax: float = 1.,
+        kmax: float = 1.0,
         dk: float = 0.05,
         num_low_k_bins: int = 0,
-        dk_high: float = -1.,
+        dk_high: float = -1.0,
         squeezed_bin_index: int = 0,
         isos_mult: float = 0.0,
         isos_tol: float = 0.1,
         for_grid_info_only: bool = False,
-        pos_fac: float = 1.,
-        meas_type: str = 'full',
-        triangle_type: str = 'equilateral'
+        pos_fac: float = 1.0,
+        meas_type: str = "full",
+        triangle_type: str = "equilateral",
     ):
         """Compute two point power spectrum (in fourier space),
         using Nbkit
@@ -58,7 +59,7 @@ class Bk(BaseSummary):
                 The meas_type flag controls what information is computed and output:
                     - 'full': bispectrum values, triangle counts in bins, and k_means in bins
                     - 'grid_info': triangle counts in bins and k_means in bins
-                    - 'unnorm_b_value': unnormalized bispectrum values (not divided by N_triangles in bin)            
+                    - 'unnorm_b_value': unnormalized bispectrum values (not divided by N_triangles in bin)
         """
         self.n_grid = n_grid
         self.kmin = kmin
@@ -76,8 +77,10 @@ class Bk(BaseSummary):
         self.meas_type = meas_type
         self.triangle_type = triangle_type
 
-    def __str__(self,):
-        return 'bk'
+    def __str__(
+        self,
+    ):
+        return "bk"
 
     def __call__(
         self,
@@ -104,22 +107,47 @@ class Bk(BaseSummary):
                 resampler="tsc",
             )
 
-        fftb = bskit.FFTBispectrum(mesh,Nmesh=self.n_grid,BoxSize=np.ones(3)*self.BoxSize,
-                                    dk=self.dk,kmin=self.kmin,kmax=self.kmax,pos_units_mpcoverh=self.pos_fac,
-                                    second=None,third=None,
-                                    num_lowk_bins=self.num_low_k_bins,dk_high=self.dk_high,
-                                    triangle_type=self.triangle_type,squeezed_bin_index=self.squeezed_bin_index,
-                                    isos_mult=self.isos_mult,isos_tol=self.isos_tol,
-                                    for_grid_info_only=self.for_grid_info_only)
-        num_k_bins = len(bskit.generate_bin_edge_list(fftb.attrs['kmin'],fftb.attrs['kmax'],
-                                                    fftb.attrs['dk'],fftb.attrs['num_lowk_bins'],
-                                                    fftb.attrs['dk_high']))
+        fftb = bskit.FFTBispectrum(
+            mesh,
+            Nmesh=self.n_grid,
+            BoxSize=np.ones(3) * self.BoxSize,
+            dk=self.dk,
+            kmin=self.kmin,
+            kmax=self.kmax,
+            pos_units_mpcoverh=self.pos_fac,
+            second=None,
+            third=None,
+            num_lowk_bins=self.num_low_k_bins,
+            dk_high=self.dk_high,
+            triangle_type=self.triangle_type,
+            squeezed_bin_index=self.squeezed_bin_index,
+            isos_mult=self.isos_mult,
+            isos_tol=self.isos_tol,
+            for_grid_info_only=self.for_grid_info_only,
+        )
+        num_k_bins = len(
+            bskit.generate_bin_edge_list(
+                fftb.attrs["kmin"],
+                fftb.attrs["kmax"],
+                fftb.attrs["dk"],
+                fftb.attrs["num_lowk_bins"],
+                fftb.attrs["dk_high"],
+            )
+        )
         start_i = 0
         end_i = num_k_bins
-        fftb.measure_bispectrum(imin=start_i,imax=end_i,verbose=0,meas_type=self.meas_type)
+        fftb.measure_bispectrum(
+            imin=start_i, imax=end_i, verbose=0, meas_type=self.meas_type
+        )
         Bk_obj_fftb = fftb.b
-        return np.array([Bk_obj_fftb['k_mean'][:,0],Bk_obj_fftb['k_mean'][:,1],Bk_obj_fftb['k_mean'][:,2],
-                        Bk_obj_fftb['B']]).T
+        return np.array(
+            [
+                Bk_obj_fftb["k_mean"][:, 0],
+                Bk_obj_fftb["k_mean"][:, 1],
+                Bk_obj_fftb["k_mean"][:, 2],
+                Bk_obj_fftb["B"],
+            ]
+        ).T
 
     def to_dataset(self, summary: np.array) -> xr.DataArray:
         """Convert a power spectrum array into an xarray dataset
@@ -132,10 +160,9 @@ class Bk(BaseSummary):
             xr.DataArray: dataset array
         """
         return xr.DataArray(
-            summary[:,-1],
+            summary[:, -1],
             dims=("k"),
             coords={
-                "k": summary[:,0],
-                },
+                "k": summary[:, 0],
+            },
         )
-
