@@ -1,7 +1,7 @@
 import numpy as np
 import xarray as xr
-from typing import List
-from summarizer.data import Catalogue
+from typing import List, Union
+from summarizer.data import BoxCatalogue, SurveyCatalogue
 from summarizer.base import BaseSummary
 import sys, os
 import summarizer.three_point.bskit_main as bskit
@@ -84,7 +84,7 @@ class Bk(BaseSummary):
 
     def __call__(
         self,
-        catalogue: Catalogue,
+        catalogue: Union[BoxCatalogue, SurveyCatalogue],
     ) -> np.array:
         """Given a catalogue, compute its bispectrum
 

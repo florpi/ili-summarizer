@@ -1,7 +1,7 @@
 import numpy as np
 import xarray as xr
-from typing import List, Optional
-from summarizer.data import Catalogue
+from typing import List, Optional, Union
+from summarizer.data import BoxCatalogue, SurveyCatalogue
 from summarizer.base import BaseSummary
 from summarizer.utils import compute_overdensity
 from nbodykit.filters import TopHat
@@ -57,7 +57,7 @@ class Mk(BaseSummary):
 
     def __call__(
         self,
-        catalogue: Catalogue,
+        catalogue: Union[BoxCatalogue, SurveyCatalogue],
     )->np.array:
         """ Given a catalogue, compute its marked power spectrum.
 

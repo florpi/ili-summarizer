@@ -1,7 +1,7 @@
 import numpy as np
 import xarray as xr
-from typing import List
-from summarizer.data import Catalogue
+from typing import List, Union
+from summarizer.data import BoxCatalogue, SurveyCatalogue
 from summarizer.base import BaseSummary
 from Corrfunc.theory.vpf import vpf
 
@@ -45,7 +45,7 @@ class CiC(BaseSummary):
     def __str__(self,):
         return 'cic'
         
-    def __call__(self, catalogue: Catalogue) -> np.array:
+    def __call__(self, catalogue: Union[BoxCatalogue,SurveyCatalogue]) -> np.array:
         """ Given a catalogue, compute CiC up to numpN for a set of 
         radii/distance scales.
 

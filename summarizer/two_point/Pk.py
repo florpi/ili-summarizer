@@ -1,7 +1,7 @@
 import numpy as np
 import xarray as xr
-from typing import List 
-from summarizer.data import Catalogue
+from typing import List, Union
+from summarizer.data import BoxCatalogue, SurveyCatalogue
 from summarizer.base import BaseSummary
 from nbodykit.algorithms.fftpower import FFTPower
 
@@ -33,7 +33,7 @@ class Pk(BaseSummary):
 
     def __call__(
         self,
-        catalogue: Catalogue,
+        catalogue: Union[BoxCatalogue, SurveyCatalogue],
         return_dataset: bool = False,
     ) -> np.array:
         """Given a catalogue, compute its power spectrum

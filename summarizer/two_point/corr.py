@@ -13,6 +13,7 @@ class TwoPCF(BaseSummary):
         mu_bins: Union[str, List],
         ells: List[int],
         n_threads: int = 1,
+        gpu: bool = False,
     ):
         """Compute two point correlation functions (in configuration space),
         using pycorr
@@ -35,6 +36,7 @@ class TwoPCF(BaseSummary):
         self.mu = 0.5*(self.mu_bins[1:] + self.mu_bins[:-1])
         self.ells = ells
         self.n_threads = n_threads
+        self.gpu = gpu
 
     def __str__(self,):
         return 'twopcf'
@@ -59,6 +61,7 @@ class TwoPCF(BaseSummary):
                 boxsize=catalogue.boxsize,
                 position_type='pos',
                 los='z',
+                gpu=self.gpu,
             )(ells=self.ells)
         else:
             tpcf = TwoPointCorrelationFunction(
@@ -72,6 +75,7 @@ class TwoPCF(BaseSummary):
                 boxsize=catalogue.boxsize,
                 position_type='pos',
                 los='z',
+                gpu=self.gpu,
             )(ells=self.ells)
 
         if return_dataset:

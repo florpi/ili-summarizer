@@ -1,7 +1,7 @@
 import numpy as np
 import xarray as xr
 from typing import List, Union
-from summarizer.data import Catalogue
+from summarizer.data import BoxCatalogue, SurveyCatalogue
 from summarizer.base import BaseSummary
 from Corrfunc.theory.vpf import vpf
 
@@ -81,7 +81,7 @@ class VPF(BaseSummary):
         self.max_cells_per_dim = max_cells_per_dim
 
 
-    def __call__(self, catalogue: Catalogue) -> np.array:
+    def __call__(self, catalogue:  Union[BoxCatalogue,SurveyCatalogue]) -> np.array:
         """ Given a catalogue, compute its VPF for a set of radii/distance scales
 
         Args:

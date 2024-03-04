@@ -3,8 +3,8 @@ import xarray as xr
 import torch
 import time
 import logging
-from typing import List, Tuple 
-from summarizer.data import Catalogue
+from typing import List, Tuple, Union
+from summarizer.data import BoxCatalogue, SurveyCatalogue
 from summarizer.base import BaseSummary
 from kymatio.torch import HarmonicScattering3D
 from kymatio.scattering3d.backend.torch_backend import TorchBackend3D
@@ -53,7 +53,7 @@ class WST(BaseSummary):
     ):
         return "wst"
 
-    def __call__(self, catalogue: Catalogue) -> np.array:
+    def __call__(self, catalogue: Union[BoxCatalogue,SurveyCatalogue]) -> np.array:
         """Given a catalogue, compute its wst coefficients
 
         Args:

@@ -98,7 +98,6 @@ class BoxCatalogue(BaseCatalogue):
             n_mesh (Optional[int], optional): number of cells in mesh. Defaults to 360.
         """
         super().__init__(
-            self,
             galaxies_pos=galaxies_pos,
             redshift=redshift,
             name=name,
@@ -155,10 +154,11 @@ class BoxCatalogue(BaseCatalogue):
             )
             rsd_factor = (1.0 + redshift) / Hubble
             pos[:, los] = pos[:, los] + vel[:, los] * rsd_factor
+        pos %= boxsize
         return cls(
             galaxies_pos=pos,
             redshift=redshift,
-            cosmo_dict=cosmo_dict,
+            cosmology=cosmo_dict,
             boxsize=boxsize,
             name=f"quijote_node{node}",
             n_mesh=n_mesh,
@@ -202,7 +202,7 @@ class BoxCatalogue(BaseCatalogue):
         return cls(
             galaxies_pos=pos,
             redshift=redshift,
-            cosmo_dict=cosmo_dict,
+            cosmology=cosmo_dict,
             name=name,
             n_mesh=n_mesh,
             boxsize=boxsize,
@@ -248,7 +248,7 @@ class BoxCatalogue(BaseCatalogue):
         return nblab_cat.to_mesh(
             Nmesh=n_mesh,
             resampler=resampler,
-            weight='Weights' if weights is not None else None,
+            #weight='Weights' if weights is not None else None,
             compensated=compensated,
         )
 
@@ -278,6 +278,7 @@ class SurveyCatalogue(BaseCatalogue):
             name (Optional[str], optional): catalogue name. Defaults to None.
             n_mesh (Optional[int], optional): number of cells in the mesh. Defaults to 360
         """
+        self.fiducial_cosmology = fiducial_cosmology
         galaxies_pos = self.sky_to_xyz(
             galaxies_ra_dec_z,
         )
@@ -285,11 +286,9 @@ class SurveyCatalogue(BaseCatalogue):
             randoms_ra_dec_z,
         )
         self.weights = weights
-        self.fiducial_cosmology = fiducial_cosmology
         self.galaxies_nbar = galaxies_nbar
         self.randoms_nbar = randoms_nbar
         super().__init__(
-            self,
             galaxies_pos=galaxies_pos,
             redshift=redshift,
             name=name,
@@ -324,7 +323,7 @@ class SurveyCatalogue(BaseCatalogue):
         """
 
         from cmass.survey.tools import BOSS_area
-        from cmass.cmass.tools import get_nofz
+        from cmass.summaries.tools import get_nofz
 
         galaxies_ra_dec_z = np.load(galaxies_path / f"rdz{node}.npy")
         randoms_ra_dec_z = np.load(
@@ -361,7 +360,7 @@ class SurveyCatalogue(BaseCatalogue):
         Returns:
             np.array:  x,y,z of shape (N_tracers, 3)
         """
-        return nblab.transform.SkyToCartesian(*ra_dec_z.T, self.fiducial_cosmology)
+        return nblab.transform.SkyToCartesian(*ra_dec_z.T, self.fiducial_cosmology).compute()
 
     def to_nbodykit_catalogue(self, weights=None, P0=1.0e4) -> "nblab.ArrayCatalog":
         """Get a nbodykit catalogue from the catalogue
@@ -374,16 +373,18 @@ class SurveyCatalogue(BaseCatalogue):
         """
         data = {
             "Position": self.galaxies_pos,
-            "Nz": self.galaxies_nbar,
-            "Weights": weights,
+            "NZ": self.galaxies_nbar,
             "Weight_FKP": 1.0 / (1.0 + self.galaxies_nbar * P0),
         }
         randoms = {
             "Position": self.randoms_pos,
-            "Nz": self.randoms_nbar,
-            "Weights": np.ones(self.randoms_pos),
+            "NZ": self.randoms_nbar,
             "Weight_FKP": 1.0 / (1.0 + self.randoms_nbar * P0),
         }
+        if weights is not None:
+            data['Weights'] = weights
+            randoms['Weights'] = np.ones(self.random_pos)
+
         galaxies = nblab.ArrayCatalog(
             data,
             dtype=np.float32,
@@ -411,11 +412,19 @@ class SurveyCatalogue(BaseCatalogue):
             np.array: mesh
         """
         nlab_cat = self.to_nbodykit_catalogue(weights=weights)
+        if weights is not None:
+            return nlab_cat.to_mesh(
+                Nmesh=n_mesh,
+                nbar="NZ",
+                fkp_weight="Weight_FKP",
+                weight="Weight",
+                #com_weight = "Com_Weight"
+                window=resampler,
+            )
         return nlab_cat.to_mesh(
             Nmesh=n_mesh,
-            nbar="Nz",
-            fkp_weight="Weight_FKPla",
-            weight="Weight",
+            nbar="NZ",
+            fkp_weight="Weight_FKP",
             #com_weight = "Com_Weight"
             window=resampler,
         )
