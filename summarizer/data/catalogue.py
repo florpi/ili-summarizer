@@ -323,8 +323,8 @@ class SurveyCatalogue(BaseCatalogue):
             SurveyCatalogue
         """
 
-        from ltu-cmass.survey.tools import BOSS_area
-        from ltu-cmass.cmass.tools import get_nofz
+        from cmass.survey.tools import BOSS_area
+        from cmass.cmass.tools import get_nofz
 
         galaxies_ra_dec_z = np.load(galaxies_path / f"rdz{node}.npy")
         randoms_ra_dec_z = np.load(
