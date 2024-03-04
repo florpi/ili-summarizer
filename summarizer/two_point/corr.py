@@ -74,10 +74,9 @@ class TwoPCF(BaseSummary):
                 n_threads=self.n_threads,
                 boxsize=catalogue.boxsize,
                 position_type='pos',
-                los='z',
+                los='midpoint',
                 gpu=self.gpu,
             )(ells=self.ells)
-
         if return_dataset:
             return self.to_dataset(tpcf)
         return tpcf
