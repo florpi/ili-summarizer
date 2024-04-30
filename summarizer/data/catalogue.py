@@ -3,10 +3,10 @@ from pathlib import Path
 from typing import Optional, Dict, Union
 from abc import abstractmethod
 
-try:
-    import nbodykit.lab as nblab
-except ModuleNotFoundError:
-    pass
+from pypower import CatalogMesh
+from astropy import cosmology
+from astropy.coordinates import SkyCoord
+from astropy import units
 
 
 class BaseCatalogue:
@@ -14,7 +14,7 @@ class BaseCatalogue:
         self,
         galaxies_pos: np.array,
         redshift: float,
-        weights: Optional[np.array] = None,
+        galaxies_weights: Optional[np.array] = None,
         boxsize: Optional[float] = None,
         name: Optional[str] = None,
         n_mesh: Optional[int] = 360,
@@ -23,10 +23,10 @@ class BaseCatalogue:
 
         Args:
             galaxies_pos (np.array): 3D positions x,y,z, of shape
-                (N_tracers, 3)
+                (N_tracers, 3) in Mpc/h
             redshift (float): redshift of the catalogue
-            weights (Optional[np.array], optional): weights for the tracers.
-                Defaults to None.
+            galaxies_weights (Optional[np.array], optional): weights for the
+                tracers. Defaults to None.
             boxsize (Optional[float], optional): simulation box size, None if
                 not periodic cubic box. Defaults to None.
             name (Optional[str], optional): catalogue name. Defaults to None.
@@ -35,7 +35,7 @@ class BaseCatalogue:
         """
 
         self.galaxies_pos = galaxies_pos
-        self.weights = weights
+        self.galaxies_weights = galaxies_weights
         self.boxsize = boxsize
         self.name = name
         self.redshift = redshift
@@ -70,7 +70,7 @@ class BaseCatalogue:
     def to_mesh(
         self,
     ):
-        return
+        raise NotImplementedError('Meshing for BaseCatalog not implemented.')
 
     @property
     def is_periodic_box(self,):
@@ -215,49 +215,50 @@ class BoxCatalogue(BaseCatalogue):
             boxsize=boxsize,
         )
 
-    def to_nbodykit_catalogue(
-        self,
-        weights: Optional[np.array] = None,
-    ) -> "nblab.ArrayCatalog":
-        """Get a nbodykit catalogue from the catalogue
-
-        Returns:
-            nblab.ArrayCatalog: nbodykit catalogue
-        """
-        data = {
-            "Position": self.galaxies_pos,
-        }
-        if weights is not None:
-            data['Weights'] = weights
-        return nblab.ArrayCatalog(
-            data,
-            BoxSize=self.boxsize,
-            dtype=np.float32,
-        )
-
     def to_mesh(
         self,
         n_mesh: int,
+        field: str = None,
         resampler: str = "tsc",
-        weights: Optional[np.array] = None,
         compensated: bool = True,
     ) -> np.array:
         """Get a mesh from the catalogue
 
         Args:
             n_mesh (int): number of cells in the mesh
-            resampler (str, optional): resampler to use. Defaults to "tsc".
+
+        field : string, default=None
+            Field to paint to mesh, one of:
+
+            - "data": data positions and weights
+            - "shifted": shifted positions and weights
+                (available only if shifted positions are provided)
+            - "randoms": randoms positions and weights
+            - "data-normalized_shifted": shifted positions and weights,
+                renormalized (by alpha) such that their sum is same as data
+                weights
+            - "data-normalized_randoms": randoms positions and weights,
+                renormalized (by alpha) such that their sum is same as data
+                weights
+            - "fkp": FKP field, i.e. data - alpha * (shifted if provided
+               else randoms)
+            - ``None``: defaults to "data" if no shifted/randoms,
+               else "fkp"
+
+        resampler (str, optional): resampler to use. Defaults to "tsc".
 
         Returns:
             np.array: mesh
         """
-        nblab_cat = self.to_nbodykit_catalogue(weights=weights,)
-        return nblab_cat.to_mesh(
-            Nmesh=n_mesh,
+        return CatalogMesh(
+            data_positions=self.galaxies_pos,
+            data_weights=self.galaxies_weights,
+            nmesh=n_mesh,
             resampler=resampler,
-            # weight='Weights' if weights is not None else None,
-            compensated=compensated,
-        )
+            position_type='pos',
+            boxsize=self.boxsize,
+            wrap=True,
+        ).to_mesh(field=field, dtype=np.float32, compensate=compensated)
 
 
 class SurveyCatalogue(BaseCatalogue):
@@ -266,10 +267,9 @@ class SurveyCatalogue(BaseCatalogue):
         galaxies_ra_dec_z: np.array,
         randoms_ra_dec_z: np.array,
         redshift: float,
-        galaxies_nbar: float,
-        randoms_nbar: float,
-        fiducial_cosmology: "nblab.cosmology.Cosmology",
-        weights: Optional[np.array] = None,
+        fiducial_cosmology: Union[Dict, cosmology.Cosmology] = None,
+        galaxies_weights: np.array = None,
+        randoms_weights: np.array = None,
         name: Optional[str] = None,
         n_mesh: Optional[int] = 360,
     ):
@@ -281,20 +281,23 @@ class SurveyCatalogue(BaseCatalogue):
             redshift (float): mean redshift of the catalogue
             galaxies_nbar (float): number density of galaxies
             randoms_nbar (float): number density of randoms
-            fiducial_cosmology (nblab.cosmology.Cosmology): fiducial cosmology,
-                used to translate ra,dec,z into x,y,z
+            fiducial_cosmology (dict, astropy.cosmology.Cosmology): fiducial
+                cosmology, used to translate ra,dec,z into x,y,z. Acceptable
+                as a dictionary of parameters or as an astropy cosmology.
+                Defaults to Planck cosmology,
             weights (Optional[np.array], optional): galaxy weights, shape
                 (N_galaxies,). Defaults to None.
             name (Optional[str], optional): catalogue name. Defaults to None.
             n_mesh (Optional[int], optional): number of cells in the mesh.
                 Defaults to 360
         """
+        if fiducial_cosmology is None:
+            fiducial_cosmology = cosmology.Planck15
         self.fiducial_cosmology = fiducial_cosmology
         galaxies_pos = self.sky_to_xyz(galaxies_ra_dec_z)
         self.randoms_pos = self.sky_to_xyz(randoms_ra_dec_z)
-        self.weights = weights
-        self.galaxies_nbar = galaxies_nbar
-        self.randoms_nbar = randoms_nbar
+        self.galaxies_weights = galaxies_weights
+        self.randoms_weights = randoms_weights
         super().__init__(
             galaxies_pos=galaxies_pos,
             redshift=redshift,
@@ -372,71 +375,58 @@ class SurveyCatalogue(BaseCatalogue):
         Returns:
             np.array:  x,y,z of shape (N_tracers, 3)
         """
-        return nblab.transform.SkyToCartesian(
-            *ra_dec_z.T, self.fiducial_cosmology
-        ).compute()
 
-    def to_nbodykit_catalogue(
-        self,
-        weights=None,
-        P0=1.0e4
-    ) -> "nblab.ArrayCatalog":
-        """Get a nbodykit catalogue from the catalogue
+        ra, dec, z = ra_dec_z.T
+        pos = SkyCoord(ra=ra*units.deg, dec=dec*units.deg,
+                       distance=self.cosmo.comoving_distance(z))
+        pos = pos.cartesian.xyz
+        pos *= self.cosmo.h  # convert from Mpc to Mpc/h
 
-        Args:
-            P0 (float, optional): P0 for FKP weights. Defaults to 1.e4.
-
-        Returns:
-            nblab.ArrayCatalog: nbodykit catalogue
-        """
-        data = {
-            "Position": self.galaxies_pos,
-            "NZ": self.galaxies_nbar,
-            "Weights": np.ones(len(self.galaxies_pos)),
-            "Weight_FKP": 1.0 / (1.0 + self.galaxies_nbar * P0),
-        }
-        randoms = {
-            "Position": self.randoms_pos,
-            "NZ": self.randoms_nbar,
-            "Weights": np.ones(len(self.randoms_pos)),
-            "Weight_FKP": 1.0 / (1.0 + self.randoms_nbar * P0),
-        }
-        if weights is not None:
-            data['Weights'] = weights
-            randoms['Weights'] = np.ones(len(self.random_pos))
-
-        galaxies = nblab.ArrayCatalog(
-            data,
-            dtype=np.float32,
-        )
-        randoms = nblab.ArrayCatalog(
-            randoms,
-            dtype=np.float32,
-        )
-        return nblab.FKPCatalog(galaxies, randoms)
+        return pos.value.T
 
     def to_mesh(
         self,
         n_mesh: int,
-        weights: Optional[np.array] = None,
+        field: str = None,
         resampler: str = "tsc",
+        compensated: bool = True,
     ) -> np.array:
         """Get a mesh from the catalogue
 
         Args:
             n_mesh (int): number of cells in the mesh
-            weights (Optional[np.array], optional): weights for the tracers.
-                Defaults to None.
-            resampler (str, optional): resampler to use. Defaults to "tsc".
+
+        field : string, default=None
+            Field to paint to mesh, one of:
+
+            - "data": data positions and weights
+            - "shifted": shifted positions and weights
+                (available only if shifted positions are provided)
+            - "randoms": randoms positions and weights
+            - "data-normalized_shifted": shifted positions and weights,
+                renormalized (by alpha) such that their sum is same as data
+                weights
+            - "data-normalized_randoms": randoms positions and weights,
+                renormalized (by alpha) such that their sum is same as data
+                weights
+            - "fkp": FKP field, i.e. data - alpha * (shifted if provided
+               else randoms)
+            - ``None``: defaults to "data" if no shifted/randoms,
+               else "fkp"
+
+        resampler (str, optional): resampler to use. Defaults to "tsc".
 
         Returns:
             np.array: mesh
         """
-        nlab_cat = self.to_nbodykit_catalogue(weights=weights)
-        return nlab_cat.to_mesh(
-            Nmesh=n_mesh,
-            nbar="NZ",
-            fkp_weight="Weight_FKP",
-            comp_weight="Weight",
-            window=resampler,
-        )
+        return CatalogMesh(
+            data_positions=self.galaxies_pos,
+            data_weights=self.galaxies_weights,
+            randoms_positions=self.randoms_positions,
+            randoms_weights=self.randoms_weights,
+            nmesh=n_mesh,
+            resampler=resampler,
+            position_type='pos',
+            boxsize=self.boxsize,
+            wrap=False
+        ).to_mesh(field=field, dtype=np.float32, compensate=compensated)
