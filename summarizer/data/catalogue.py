@@ -93,10 +93,10 @@ class BoxCatalogue(BaseCatalogue):
         Args:
             galaxies_pos (np.array): galaxy positions x,y,z
             boxsize (float):  simulation box size
-            redshift (float): redshift of the catalogue 
+            redshift (float): redshift of the catalogue
             weights (Optional[np.array], optional): weights for the tracers.
                 Defaults to None.
-            cosmology (Dict[str, float]): true cosmology of the simultion 
+            cosmology (Dict[str, float]): true cosmology of the simulation
             name (Optional[str], optional): catalogue name. Defaults to None.
             n_mesh (Optional[int], optional): number of cells in mesh.
                 Defaults to 360.
@@ -267,7 +267,8 @@ class SurveyCatalogue(BaseCatalogue):
         galaxies_ra_dec_z: np.array,
         randoms_ra_dec_z: np.array,
         redshift: float,
-        fiducial_cosmology: Union[Dict, cosmology.Cosmology] = None,
+        fiducial_cosmology:
+            Union[Dict[str, float], cosmology.Cosmology] = None,
         galaxies_weights: np.array = None,
         randoms_weights: np.array = None,
         name: Optional[str] = None,
@@ -293,6 +294,13 @@ class SurveyCatalogue(BaseCatalogue):
         """
         if fiducial_cosmology is None:
             fiducial_cosmology = cosmology.Planck15
+        elif isinstance(fiducial_cosmology, dict):
+            fiducial_cosmology = cosmology.FlatLambdaCDM(
+                H0=fiducial_cosmology['h']*100,
+                Om0=fiducial_cosmology['Omega_m'],
+                Ob0=fiducial_cosmology['Omega_b']
+            )
+
         self.fiducial_cosmology = fiducial_cosmology
         galaxies_pos = self.sky_to_xyz(galaxies_ra_dec_z)
         self.randoms_pos = self.sky_to_xyz(randoms_ra_dec_z)
@@ -336,28 +344,18 @@ class SurveyCatalogue(BaseCatalogue):
             SurveyCatalogue
         """
 
-        from cmass.survey.tools import BOSS_area
-        from cmass.summaries.tools import get_nofz
-
         galaxies_ra_dec_z = np.load(galaxies_path / f"rdz{node}.npy")
         randoms_ra_dec_z = np.load(
             randoms_path / "random0_DR12v5_CMASS_North_PRECOMPUTED.npy"
         )
-        fiducial_cosmology = nblab.cosmology.Planck15
+        fiducial_cosmology = cosmology.Planck15
         if weights is None:
             weights = np.ones(len(galaxies_ra_dec_z))
-        fsky = BOSS_area() / (360.0**2 / np.pi)
-        ng_of_z = get_nofz(
-            galaxies_ra_dec_z[:, -1], fsky, cosmo=fiducial_cosmology)
-        galaxies_nbar = ng_of_z(galaxies_ra_dec_z[:, -1])
-        randoms_nbar = ng_of_z(randoms_ra_dec_z[:, -1])
         return cls(
             galaxies_ra_dec_z=galaxies_ra_dec_z,
             randoms_ra_dec_z=randoms_ra_dec_z,
             weights=weights,
             redshift=mean_redshift,
-            galaxies_nbar=galaxies_nbar,
-            randoms_nbar=randoms_nbar,
             fiducial_cosmology=fiducial_cosmology,
             name=name,
             n_mesh=n_mesh,
@@ -414,7 +412,8 @@ class SurveyCatalogue(BaseCatalogue):
             - ``None``: defaults to "data" if no shifted/randoms,
                else "fkp"
 
-        resampler (str, optional): resampler to use. Defaults to "tsc".
+        resampler (str, optional): resampler to use. Choices are
+            ['ngp', 'cic', 'tcs', 'pcs']. Defaults to "tsc".
 
         Returns:
             np.array: mesh
