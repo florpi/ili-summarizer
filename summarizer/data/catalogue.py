@@ -1,6 +1,6 @@
 import numpy as np
 from pathlib import Path
-from typing import List, Optional, Dict, Union
+from typing import Optional, Dict, Union
 from abc import abstractmethod
 
 try:
@@ -22,12 +22,16 @@ class BaseCatalogue:
         """Base catalogue object for manipulating pointclouds
 
         Args:
-            galaxies_pos (np.array): 3D positions x,y,z, of shape (N_tracers, 3)
+            galaxies_pos (np.array): 3D positions x,y,z, of shape
+                (N_tracers, 3)
             redshift (float): redshift of the catalogue
-            weights (Optional[np.array], optional): weights for the tracers. Defaults to None.
-            boxsize (Optional[float], optional): simulation box size, None if not periodic cubic box. Defaults to None.
+            weights (Optional[np.array], optional): weights for the tracers.
+                Defaults to None.
+            boxsize (Optional[float], optional): simulation box size, None if
+                not periodic cubic box. Defaults to None.
             name (Optional[str], optional): catalogue name. Defaults to None.
-            n_mesh (Optional[int], optional): number of cells in mesh. Defaults to 360.
+            n_mesh (Optional[int], optional): number of cells in mesh.
+                Defaults to 360.
         """
 
         self.galaxies_pos = galaxies_pos
@@ -41,8 +45,6 @@ class BaseCatalogue:
                 n_mesh=n_mesh,
                 weights=self.weights,
             )
-
-
 
     def __str__(
         self,
@@ -70,10 +72,10 @@ class BaseCatalogue:
     ):
         return
 
-
     @property
     def is_periodic_box(self,):
         return True if self.boxsize is not None else False
+
 
 class BoxCatalogue(BaseCatalogue):
     def __init__(
@@ -92,10 +94,12 @@ class BoxCatalogue(BaseCatalogue):
             galaxies_pos (np.array): galaxy positions x,y,z
             boxsize (float):  simulation box size
             redshift (float): redshift of the catalogue 
-            weights (Optional[np.array], optional): weights for the tracers. Defaults to None.
+            weights (Optional[np.array], optional): weights for the tracers.
+                Defaults to None.
             cosmology (Dict[str, float]): true cosmology of the simultion 
             name (Optional[str], optional): catalogue name. Defaults to None.
-            n_mesh (Optional[int], optional): number of cells in mesh. Defaults to 360.
+            n_mesh (Optional[int], optional): number of cells in mesh.
+                Defaults to 360.
         """
         super().__init__(
             galaxies_pos=galaxies_pos,
@@ -118,17 +122,20 @@ class BoxCatalogue(BaseCatalogue):
         los: Optional[int] = 2,
         n_mesh: Optional[int] = 360,
         boxsize: Optional[float] = 1000.0,
-    ) -> "Catalogue":
+    ) -> "BaseCatalogue":
         """Get a catalogue for the quijote simulations latin hyper cube
 
         Args:
             node (int): node to read
             redshift (float): redshift, one of 0.0, 0.5, 1.0, 2.0, 3.0
-            n_halos (Optional[int], optional): Number of halos to include. Defaults to None.
-            n_density_halos (Optional[int], optional): Number density of halos to select. Defaults to None.
+            n_halos (Optional[int], optional): Number of halos to include.
+                Defaults to None.
+            n_density_halos (Optional[int], optional): Number density of halos
+                to select. Defaults to None.
             path_to_lhcs (Path, optional): Path to latin hypercube data.
             mesh (bool, optional): whether to create a mesh. Defaults to True.
-            n_mesh (Optional[int], optional): number of cells in the mesh. Defaults to 50.
+            n_mesh (Optional[int], optional): number of cells in the mesh.
+                Defaults to 50.
 
         Returns:
             Catalogue: catalogue for simulation
@@ -233,7 +240,7 @@ class BoxCatalogue(BaseCatalogue):
         n_mesh: int,
         resampler: str = "tsc",
         weights: Optional[np.array] = None,
-        compensated: bool =True,
+        compensated: bool = True,
     ) -> np.array:
         """Get a mesh from the catalogue
 
@@ -248,9 +255,10 @@ class BoxCatalogue(BaseCatalogue):
         return nblab_cat.to_mesh(
             Nmesh=n_mesh,
             resampler=resampler,
-            #weight='Weights' if weights is not None else None,
+            # weight='Weights' if weights is not None else None,
             compensated=compensated,
         )
+
 
 class SurveyCatalogue(BaseCatalogue):
     def __init__(
@@ -273,10 +281,13 @@ class SurveyCatalogue(BaseCatalogue):
             redshift (float): mean redshift of the catalogue
             galaxies_nbar (float): number density of galaxies
             randoms_nbar (float): number density of randoms
-            fiducial_cosmology (nblab.cosmology.Cosmology): fiducial cosmology, used to translate ra,dec,z into x,y,z
-            weights (Optional[np.array], optional): galaxy weights, shape (N_galaxies,). Defaults to None.
+            fiducial_cosmology (nblab.cosmology.Cosmology): fiducial cosmology,
+                used to translate ra,dec,z into x,y,z
+            weights (Optional[np.array], optional): galaxy weights, shape
+                (N_galaxies,). Defaults to None.
             name (Optional[str], optional): catalogue name. Defaults to None.
-            n_mesh (Optional[int], optional): number of cells in the mesh. Defaults to 360
+            n_mesh (Optional[int], optional): number of cells in the mesh.
+                Defaults to 360
         """
         self.fiducial_cosmology = fiducial_cosmology
         galaxies_pos = self.sky_to_xyz(
@@ -312,11 +323,15 @@ class SurveyCatalogue(BaseCatalogue):
         Args:
             galaxies_path (Path): path to galaxy positions in ra,dec,z
             randoms_path (Path): path to randoms positions in ra,dec,z
-            node (Optional[int], optional): node to read if simulations. Defaults to None.
-            weights (Optional[np.array], optional):  weights for galaxies. Defaults to None.
-            mean_redshift (float, optional): mean redshift of the catalogue. Defaults to 0.5.
+            node (Optional[int], optional): node to read if simulations.
+                Defaults to None.
+            weights (Optional[np.array], optional):  weights for galaxies.
+                Defaults to None.
+            mean_redshift (float, optional): mean redshift of the catalogue.
+                Defaults to 0.5.
             name (str, optional): catalogue name. Defaults to None.
-            n_mesh (Optional[int], optional): number of cells in the mesh. Defaults to 360
+            n_mesh (Optional[int], optional): number of cells in the mesh.
+                Defaults to 360
 
         Returns:
             SurveyCatalogue
@@ -333,7 +348,8 @@ class SurveyCatalogue(BaseCatalogue):
         if weights is None:
             weights = np.ones(len(galaxies_ra_dec_z))
         fsky = BOSS_area() / (360.0**2 / np.pi)
-        ng_of_z = get_nofz(galaxies_ra_dec_z[:, -1], fsky, cosmo=fiducial_cosmology)
+        ng_of_z = get_nofz(
+            galaxies_ra_dec_z[:, -1], fsky, cosmo=fiducial_cosmology)
         galaxies_nbar = ng_of_z(galaxies_ra_dec_z[:, -1])
         randoms_nbar = ng_of_z(randoms_ra_dec_z[:, -1])
         return cls(
@@ -360,9 +376,15 @@ class SurveyCatalogue(BaseCatalogue):
         Returns:
             np.array:  x,y,z of shape (N_tracers, 3)
         """
-        return nblab.transform.SkyToCartesian(*ra_dec_z.T, self.fiducial_cosmology).compute()
+        return nblab.transform.SkyToCartesian(
+            *ra_dec_z.T, self.fiducial_cosmology
+        ).compute()
 
-    def to_nbodykit_catalogue(self, weights=None, P0=1.0e4) -> "nblab.ArrayCatalog":
+    def to_nbodykit_catalogue(
+        self,
+        weights=None,
+        P0=1.0e4
+    ) -> "nblab.ArrayCatalog":
         """Get a nbodykit catalogue from the catalogue
 
         Args:
@@ -398,14 +420,15 @@ class SurveyCatalogue(BaseCatalogue):
     def to_mesh(
         self,
         n_mesh: int,
-        weights: Optional[np.array]=None, 
+        weights: Optional[np.array] = None,
         resampler: str = "tsc",
     ) -> np.array:
         """Get a mesh from the catalogue
 
         Args:
             n_mesh (int): number of cells in the mesh
-            weights (Optional[np.array], optional): weights for the tracers. Defaults to None.
+            weights (Optional[np.array], optional): weights for the tracers.
+                Defaults to None.
             resampler (str, optional): resampler to use. Defaults to "tsc".
 
         Returns:
@@ -418,13 +441,13 @@ class SurveyCatalogue(BaseCatalogue):
                 nbar="NZ",
                 fkp_weight="Weight_FKP",
                 weight="Weight",
-                #com_weight = "Com_Weight"
+                # com_weight = "Com_Weight"
                 window=resampler,
             )
         return nlab_cat.to_mesh(
             Nmesh=n_mesh,
             nbar="NZ",
             fkp_weight="Weight_FKP",
-            #com_weight = "Com_Weight"
+            # com_weight = "Com_Weight"
             window=resampler,
         )
