@@ -290,12 +290,8 @@ class SurveyCatalogue(BaseCatalogue):
                 Defaults to 360
         """
         self.fiducial_cosmology = fiducial_cosmology
-        galaxies_pos = self.sky_to_xyz(
-            galaxies_ra_dec_z,
-        )
-        self.randoms_pos = self.sky_to_xyz(
-            randoms_ra_dec_z,
-        )
+        galaxies_pos = self.sky_to_xyz(galaxies_ra_dec_z)
+        self.randoms_pos = self.sky_to_xyz(randoms_ra_dec_z)
         self.weights = weights
         self.galaxies_nbar = galaxies_nbar
         self.randoms_nbar = randoms_nbar
@@ -396,23 +392,25 @@ class SurveyCatalogue(BaseCatalogue):
         data = {
             "Position": self.galaxies_pos,
             "NZ": self.galaxies_nbar,
+            "Weights": np.ones(len(self.galaxies_pos)),
             "Weight_FKP": 1.0 / (1.0 + self.galaxies_nbar * P0),
         }
         randoms = {
             "Position": self.randoms_pos,
             "NZ": self.randoms_nbar,
+            "Weights": np.ones(len(self.randoms_pos)),
             "Weight_FKP": 1.0 / (1.0 + self.randoms_nbar * P0),
         }
         if weights is not None:
             data['Weights'] = weights
-            randoms['Weights'] = np.ones(self.random_pos)
+            randoms['Weights'] = np.ones(len(self.random_pos))
 
         galaxies = nblab.ArrayCatalog(
             data,
             dtype=np.float32,
         )
         randoms = nblab.ArrayCatalog(
-            data,
+            randoms,
             dtype=np.float32,
         )
         return nblab.FKPCatalog(galaxies, randoms)
@@ -435,19 +433,10 @@ class SurveyCatalogue(BaseCatalogue):
             np.array: mesh
         """
         nlab_cat = self.to_nbodykit_catalogue(weights=weights)
-        if weights is not None:
-            return nlab_cat.to_mesh(
-                Nmesh=n_mesh,
-                nbar="NZ",
-                fkp_weight="Weight_FKP",
-                weight="Weight",
-                # com_weight = "Com_Weight"
-                window=resampler,
-            )
         return nlab_cat.to_mesh(
             Nmesh=n_mesh,
             nbar="NZ",
             fkp_weight="Weight_FKP",
-            # com_weight = "Com_Weight"
+            comp_weight="Weight",
             window=resampler,
         )
