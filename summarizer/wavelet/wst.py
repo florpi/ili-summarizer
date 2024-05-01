@@ -1,9 +1,8 @@
 import numpy as np
 import xarray as xr
 import torch
-import time
 import logging
-from typing import List, Tuple, Union
+from typing import List, Union
 from summarizer.data import BoxCatalogue, SurveyCatalogue
 from summarizer.base import BaseSummary
 from kymatio.torch import HarmonicScattering3D
@@ -53,7 +52,10 @@ class WST(BaseSummary):
     ):
         return "wst"
 
-    def __call__(self, catalogue: Union[BoxCatalogue,SurveyCatalogue]) -> np.array:
+    def __call__(self, 
+        catalogue: Union[BoxCatalogue,SurveyCatalogue],
+        return_dataset: bool = False,
+    ) -> np.array:
         """Given a catalogue, compute its wst coefficients
 
         Args:
@@ -64,7 +66,7 @@ class WST(BaseSummary):
         """
         device = "cuda" if torch.cuda.is_available() else "cpu"
         logging.info(f'Using device = {device}')
-        density_field = catalogue.mesh.preview()
+        density_field = catalogue.get_mesh(n_mesh=self.n_mesh)
         full_density_batch = torch.from_numpy(np.asarray(np.real(density_field)))
         full_density_batch = full_density_batch.to(device).float()
         full_density_batch = full_density_batch.contiguous()
@@ -83,7 +85,10 @@ class WST(BaseSummary):
         s0_batch = torch.from_numpy(test_shape)
         integr = TorchBackend3D.compute_integrals(s0_batch, self.integral_powers)
         s0 = integr.cpu().numpy()[0, 0]
-        return np.hstack((s0, s_mat_avg))/self.n_mesh**3
+        wst_coefficients = np.hstack((s0, s_mat_avg))/self.n_mesh**3
+        if return_dataset:
+            return self.to_dataset(wst_coefficients)
+        return wst_coefficients
 
     def to_dataset(self, summary: np.array) -> xr.DataArray:
         """Convert a wst array into an xarray dataset

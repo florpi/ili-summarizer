@@ -4,19 +4,18 @@ from typing import List, Optional, Union
 from summarizer.data import BoxCatalogue, SurveyCatalogue
 from summarizer.base import BaseSummary
 from summarizer.utils import compute_overdensity
-from nbodykit.filters import TopHat
-from nbodykit.algorithms.fftpower import FFTPower
+from pypower.fft_power import MeshFFTPower
 
 class Mk(BaseSummary):
     def __init__(
         self,
-        density_radius: Optional[float]=30.,
+        smoothing_radius: Optional[float]=30.,
         mark_delta_s: Optional[float] = 0.1,
         mark_p: Optional[float] = 1.,
-        n_grid: int = 360,
-        dk: float = 0.005,
+        n_mesh: int = 360,
         ells: List[int] = [0, 2, 4],
-        LOS: List[int] = [0, 0, 1],
+        los: str = 'z',
+        compensations: str = 'tsc',
 
     ):
         """ Compute the marked power spectrum as in arxiv:2001.11024, where the mark
@@ -33,13 +32,13 @@ class Mk(BaseSummary):
             ells (List[int]): list of multipoles to compute
             LOS (List[int]): line of sight (x,y,z)
         """
-        self.density_radius = density_radius
+        self.smoothing_radius = smoothing_radius 
         self.mark_delta_s = mark_delta_s
         self.mark_p = mark_p
-        self.n_grid = n_grid
-        self.dk = dk
+        self.n_mesh =n_mesh 
         self.ells = ells
-        self.LOS = LOS
+        self.los = los 
+        self.compensations = compensations
 
     def __str__(self,):
         return 'mk'
@@ -58,6 +57,7 @@ class Mk(BaseSummary):
     def __call__(
         self,
         catalogue: Union[BoxCatalogue, SurveyCatalogue],
+        return_dataset: bool = False,
     )->np.array:
         """ Given a catalogue, compute its marked power spectrum.
 
@@ -67,33 +67,36 @@ class Mk(BaseSummary):
         Returns:
             np.array: marked power spectrum 
         """
-        delta_env = compute_overdensity(
-            catalogue.pos,
-            tracers_mesh = catalogue.mesh,
-            filter=TopHat(r=self.density_radius),
+        overdensity = compute_overdensity(
+            query_positions=catalogue.pos,
+            catalogue=catalogue,
+            smoothing_radius=self.smoothing_radius,
         )
+        # get a mesh weighted by the density field
         marked_mesh = catalogue.to_mesh(
             n_mesh = self.n_grid,
-            weights=self.get_mark(delta=delta_env),
+            weights=self.get_mark(delta=overdensity),
         )
-        pk_moments = FFTPower(
-            marked_mesh,
-            mode="2d",
-            dk=self.dk,
-            kmin=0.0,
-            poles=self.ells,
-            los=self.LOS,
-        )
-        k = pk_moments.poles["k"]
-        pks = []
-        for ell in self.ells:
-            multipole = pk_moments.poles[f"power_{ell}"].real
-            #if ell == 0:
-            #    multipole -= pk_moments.attrs["shotnoise"]
-            # TODO: Issue with multiple shotnoise 
-            pks.append(multipole)
-        pks.append(k)
-        return np.vstack(pks)    
+        if catalogue.is_periodic_box:
+            power = MeshFFTPower(
+                marked_mesh, 
+                edges=None, 
+                ells=self.ells, 
+                los=self.los, 
+                compensations=self.compensations,
+            ).poles
+        else:
+            power = MeshFFTPower(
+                marked_mesh, 
+                edges=None, 
+                ells=self.ells, 
+                los='firstpoint',
+                compensations=self.compensations,
+            ).poles
+        if return_dataset:
+            return self.to_dataset(power)
+        return power
+
 
     def to_dataset(self, summary: np.array) -> xr.DataArray:
         """Convert a power spectrum array into an xarray dataset
@@ -105,11 +108,15 @@ class Mk(BaseSummary):
         Returns:
             xr.DataArray: dataset array
         """
+        k = summary.k
+        pk = []
+        for ell in self.ells:
+            pk.append(summary(ell=ell, complex=False, remove_shotnoise=True if ell == 0 else False))
         return xr.DataArray(
-            summary[:-1],
+            np.vstack(pk),
             dims=("ells", "k"),
             coords={
                 "ells": self.ells,
-                "k": summary[-1],
+                "k": k,
             },
         )

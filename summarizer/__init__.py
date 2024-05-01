@@ -2,14 +2,6 @@
 # Current backends: nbodykit, pycorr, jax, kymatio
 notfound = []
 try:
-    import nbodykit
-    from .two_point import Pk, Mk
-    from .environment import DensitySplit
-    from .three_point import Bk
-except ModuleNotFoundError:
-    notfound.append('nbodykit')
-
-try:
     import jax, jaxlib
     from .knn import KNN
 except ModuleNotFoundError:

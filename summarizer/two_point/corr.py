@@ -13,6 +13,7 @@ class TwoPCF(BaseSummary):
         mu_bins: Union[str, List],
         ells: List[int],
         n_threads: int = 1,
+        los: str = 'z',
         gpu: bool = False,
     ):
         """Compute two point correlation functions (in configuration space),
@@ -35,6 +36,7 @@ class TwoPCF(BaseSummary):
             self.mu_bins = np.array(mu_bins)
         self.mu = 0.5*(self.mu_bins[1:] + self.mu_bins[:-1])
         self.ells = ells
+        self.los = los
         self.n_threads = n_threads
         self.gpu = gpu
 
@@ -55,12 +57,12 @@ class TwoPCF(BaseSummary):
                 "smu",
                 edges=(self.r_bins, self.mu_bins),
                 data_positions1=catalogue.galaxies_pos,
-                data_weights1=catalogue.weights,
+                data_weights1=catalogue.galaxies_weights,
                 engine="corrfunc",
                 n_threads=self.n_threads,
                 boxsize=catalogue.boxsize,
                 position_type='pos',
-                los='z',
+                los=self.los,
                 gpu=self.gpu,
             )(ells=self.ells)
         else:
@@ -68,7 +70,7 @@ class TwoPCF(BaseSummary):
                 "smu",
                 edges=(self.r_bins, self.mu_bins),
                 data_positions1=catalogue.galaxies_pos,
-                data_weights1=catalogue.weights,
+                data_weights1=catalogue.galaxies_weights,
                 randoms_positions1=catalogue.randoms_pos,
                 engine="corrfunc",
                 n_threads=self.n_threads,

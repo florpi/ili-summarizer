@@ -3,16 +3,17 @@ import xarray as xr
 from typing import List, Union
 from summarizer.data import BoxCatalogue, SurveyCatalogue
 from summarizer.base import BaseSummary
-from nbodykit.algorithms.fftpower import FFTPower
+from pypower.fft_power import MeshFFTPower
+
 
 
 class Pk(BaseSummary):
     def __init__(
         self,
-        n_grid: int = 360,
-        dk: float = 0.005,
+        n_mesh: int = 360,
         ells: List[int] = [0, 2, 4],
-        LOS: List[int] = [0, 0, 1],
+        los: str = 'z',
+        compensations: str = 'tsc',
     ):
         """Compute two point power spectrum (in fourier space),
         using nbodykit
@@ -23,10 +24,10 @@ class Pk(BaseSummary):
             ells (List[int]): list of multipoles to compute
             LOS (List[int]): line of sight (x,y,z)
         """
-        self.n_grid = n_grid
-        self.dk = dk
+        self.n_mesh = n_mesh 
         self.ells = ells
-        self.LOS = LOS
+        self.los = los 
+        self.compensations = compensations
 
     def __str__(self,):
         return 'pk'
@@ -44,38 +45,26 @@ class Pk(BaseSummary):
         Returns:
             np.array:
         """
-        if hasattr(catalogue, "mesh"):
-            assert catalogue.mesh.preview().shape == (
-                self.n_grid,
-                self.n_grid,
-                self.n_grid,
-            ), "Mesh has wrong shape!"
-            mesh = catalogue.mesh
+        galaxies_mesh = catalogue.get_mesh(self.n_mesh)
+        if catalogue.is_periodic_box:
+            power = MeshFFTPower(
+                galaxies_mesh, 
+                edges=None, 
+                ells=self.ells, 
+                los=self.los, 
+                compensations=self.compensations,
+            ).poles
         else:
-            mesh = catalogue.to_mesh(
-                n_mesh=self.n_grid,
-                resampler="tsc",
-            )
-        pk_moments = FFTPower(
-            mesh,
-            mode="2d",
-            dk=self.dk,
-            kmin=0.0,
-            poles=self.ells,
-            los=self.LOS,
-        )
-        k = pk_moments.poles["k"]
-        pks = []
-        for ell in self.ells:
-            multipole = pk_moments.poles[f"power_{ell}"].real
-            if ell == 0:
-                multipole -= pk_moments.attrs["shotnoise"]
-            pks.append(multipole)
-        pks.append(k)
-        pks = np.vstack(pks)
+            power = MeshFFTPower(
+                galaxies_mesh, 
+                edges=None, 
+                ells=self.ells, 
+                los='firstpoint',
+                compensations=self.compensations,
+            ).poles
         if return_dataset:
-            return self.to_dataset(pks)
-        return pks
+            return self.to_dataset(power)
+        return power 
 
     def to_dataset(self, summary: np.array) -> xr.DataArray:
         """Convert a power spectrum array into an xarray dataset
@@ -87,11 +76,15 @@ class Pk(BaseSummary):
         Returns:
             xr.DataArray: dataset array
         """
+        k = summary.k
+        pk = []
+        for ell in self.ells:
+            pk.append(summary(ell=ell, complex=False, remove_shotnoise=True if ell == 0 else False))
         return xr.DataArray(
-            summary[:-1],
+            np.vstack(pk),
             dims=("ells", "k"),
             coords={
                 "ells": self.ells,
-                "k": summary[-1],
+                "k": k,
             },
         )

@@ -4,8 +4,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from summarizer.data import BoxCatalogue, SurveyCatalogue 
 from summarizer.two_point import TwoPCF 
-from cmass.summaries.tools import get_nofz
-import nbodykit.lab as nblab
+from cmass.survey.tools import xyz_to_sky
+#from cmass.summaries.tools import get_nofz
+#import nbodykit.lab as nblab
 
 
 cat = BoxCatalogue.from_quijote(
@@ -20,11 +21,14 @@ tpcf_summarizer = TwoPCF(r_bins=r_bins, mu_bins=mu_bins,ells=[0,2])
 tpcf = tpcf_summarizer(cat)
 tpcf = tpcf_summarizer.to_dataset(tpcf)
 
+# use random velocities
 
-galaxies_ra_dec_z = nblab.transform.CartesianToSky(cat.galaxies_pos, cosmo=nblab.cosmology.Planck15).compute().T
+"""
+galaxies_ra_dec_z = xyz_to_sky(cat.glaxyies_pos) #nblab.transform.CartesianToSky(cat.galaxies_pos, cosmo=nblab.cosmology.Planck15).compute().T
+print(galaxies_ra_dec_z.shape)
 
 randoms_pos = np.random.uniform(0, cat.boxsize, size=(10*len(cat), 3))
-randoms_ra_dec_z = nblab.transform.CartesianToSky(randoms_pos, cosmo=nblab.cosmology.Planck15).compute().T
+randoms_ra_dec_z = xyz_to_sky(random_pos, cosmo= )#nblab.transform.CartesianToSky(randoms_pos, cosmo=nblab.cosmology.Planck15).compute().T
 
 
 fiducial_cosmology= nblab.cosmology.Planck15
@@ -53,3 +57,4 @@ plt.legend()
 plt.xlabel('r [Mpc/h]')
 plt.ylabel('TPCF')
 plt.savefig('box_survey.png')
+"""

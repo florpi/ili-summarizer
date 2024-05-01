@@ -4,7 +4,7 @@ from typing import List, Union
 from summarizer.data import BoxCatalogue, SurveyCatalogue
 from summarizer.base import BaseSummary
 import sys, os
-import summarizer.three_point.bskit_main as bskit
+from PolyBin3D import PolyBin3D, BSpec
 
 
 class Bk(BaseSummary):
@@ -27,6 +27,7 @@ class Bk(BaseSummary):
     ):
         """Compute two point power spectrum (in fourier space),
         using Nbkit
+        https://github.com/oliverphilcox/PolyBin3D
 
         Args:
             n_grid (int): compute the density field on a regular grid with grid x grid x grid voxels

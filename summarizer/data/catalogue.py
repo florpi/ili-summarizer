@@ -18,6 +18,7 @@ class BaseCatalogue:
         boxsize: Optional[float] = None,
         name: Optional[str] = None,
         n_mesh: Optional[int] = 360,
+        mesh_resampler: str= 'tsc',
     ):
         """Base catalogue object for manipulating pointclouds
 
@@ -35,15 +36,18 @@ class BaseCatalogue:
         """
 
         self.galaxies_pos = galaxies_pos
-        self.galaxies_weights = galaxies_weights
+        if galaxies_weights is None:
+            self.galaxies_weights = np.ones(len(galaxies_pos))
+        else:
+            self.galaxies_weights = galaxies_weights
         self.boxsize = boxsize
         self.name = name
         self.redshift = redshift
         self.n_mesh = n_mesh
+        self.mesh_resampler = mesh_resampler
         if self.n_mesh is not None:
-            self.mesh = self.to_mesh(
+            self.galaxies_mesh = self.to_mesh(
                 n_mesh=n_mesh,
-                weights=self.weights,
             )
 
     def __str__(
@@ -72,9 +76,35 @@ class BaseCatalogue:
     ):
         raise NotImplementedError('Meshing for BaseCatalog not implemented.')
 
+    @classmethod
+    def convert_cosmology(cls, cosmology_dict):
+        return cosmology.FlatLambdaCDM(
+                H0=cosmology_dict['h']*100,
+                Om0=cosmology_dict['Omega_m'],
+                Ob0=cosmology_dict['Omega_b']
+            )
+
     @property
     def is_periodic_box(self,):
         return True if self.boxsize is not None else False
+
+    @property
+    def has_randoms(self,):
+        return True if hasattr(self, 'randoms_pos') else False
+
+
+    def get_mesh(self, n_mesh):
+        if hasattr(self, "galaxies_mesh"):
+            if self.galaxies_mesh.shape == (
+                n_mesh,
+                n_mesh,
+                n_mesh,
+            ):
+                return self.galaxies_mesh
+        self.galaxies_mesh = self.to_mesh(
+            n_mesh=n_mesh,
+        )
+        return self.galaxies_mesh
 
 
 class BoxCatalogue(BaseCatalogue):
@@ -83,8 +113,8 @@ class BoxCatalogue(BaseCatalogue):
         galaxies_pos: np.array,
         boxsize: float,
         redshift: float,
-        cosmology: Dict[str, float],
-        weights: Optional[np.array] = None,
+        cosmology: Optional[cosmology.Cosmology] = None,
+        galaxies_weights: Optional[np.array] = None,
         name: Optional[str] = None,
         n_mesh: Optional[int] = 360,
     ):
@@ -105,7 +135,7 @@ class BoxCatalogue(BaseCatalogue):
             galaxies_pos=galaxies_pos,
             redshift=redshift,
             name=name,
-            weights=weights,
+            galaxies_weights=galaxies_weights,
             n_mesh=n_mesh,
             boxsize=boxsize,
         )
@@ -162,10 +192,13 @@ class BoxCatalogue(BaseCatalogue):
             rsd_factor = (1.0 + redshift) / Hubble
             pos[:, los] = pos[:, los] + vel[:, los] * rsd_factor
         pos %= boxsize
+        cosmology = cls.convert_cosmology(
+            cosmo_dict,
+        )
         return cls(
             galaxies_pos=pos,
             redshift=redshift,
-            cosmology=cosmo_dict,
+            cosmology=cosmology,
             boxsize=boxsize,
             name=f"quijote_node{node}",
             n_mesh=n_mesh,
@@ -219,8 +252,8 @@ class BoxCatalogue(BaseCatalogue):
         self,
         n_mesh: int,
         field: str = None,
-        resampler: str = "tsc",
         compensated: bool = True,
+        weights: Optional[np.array] = None,
     ) -> np.array:
         """Get a mesh from the catalogue
 
@@ -250,13 +283,19 @@ class BoxCatalogue(BaseCatalogue):
         Returns:
             np.array: mesh
         """
+        data_weights = np.ones(len(self.galaxies_pos))
+        if self.galaxies_weights is not None:
+            data_weights *= self.galaxies_weights
+        if weights is not None:
+            data_weights *= weights
         return CatalogMesh(
             data_positions=self.galaxies_pos,
-            data_weights=self.galaxies_weights,
+            data_weights=data_weights,
             nmesh=n_mesh,
-            resampler=resampler,
+            resampler=self.mesh_resampler,
             position_type='pos',
             boxsize=self.boxsize,
+            boxcenter=[self.boxsize / 2.0, self.boxsize / 2.0, self.boxsize / 2.0],
             wrap=True,
         ).to_mesh(field=field, dtype=np.float32, compensate=compensated)
 
@@ -292,15 +331,6 @@ class SurveyCatalogue(BaseCatalogue):
             n_mesh (Optional[int], optional): number of cells in the mesh.
                 Defaults to 360
         """
-        if fiducial_cosmology is None:
-            fiducial_cosmology = cosmology.Planck15
-        elif isinstance(fiducial_cosmology, dict):
-            fiducial_cosmology = cosmology.FlatLambdaCDM(
-                H0=fiducial_cosmology['h']*100,
-                Om0=fiducial_cosmology['Omega_m'],
-                Ob0=fiducial_cosmology['Omega_b']
-            )
-
         self.fiducial_cosmology = fiducial_cosmology
         galaxies_pos = self.sky_to_xyz(galaxies_ra_dec_z)
         self.randoms_pos = self.sky_to_xyz(randoms_ra_dec_z)
@@ -320,7 +350,7 @@ class SurveyCatalogue(BaseCatalogue):
         galaxies_path: Path,
         randoms_path: Path,
         node: Optional[int] = None,
-        weights: Optional[np.array] = None,
+        galaxies_weights: Optional[np.array] = None,
         mean_redshift: float = 0.5,
         name: str = None,
         n_mesh: Optional[int] = 360,
@@ -349,12 +379,12 @@ class SurveyCatalogue(BaseCatalogue):
             randoms_path / "random0_DR12v5_CMASS_North_PRECOMPUTED.npy"
         )
         fiducial_cosmology = cosmology.Planck15
-        if weights is None:
-            weights = np.ones(len(galaxies_ra_dec_z))
+        if galaxies_weights is None:
+            galaxies_weights = np.ones(len(galaxies_ra_dec_z))
         return cls(
             galaxies_ra_dec_z=galaxies_ra_dec_z,
             randoms_ra_dec_z=randoms_ra_dec_z,
-            weights=weights,
+            galaxies_weights=galaxies_weights,
             redshift=mean_redshift,
             fiducial_cosmology=fiducial_cosmology,
             name=name,
@@ -376,9 +406,9 @@ class SurveyCatalogue(BaseCatalogue):
 
         ra, dec, z = ra_dec_z.T
         pos = SkyCoord(ra=ra*units.deg, dec=dec*units.deg,
-                       distance=self.cosmo.comoving_distance(z))
+                       distance=self.fiducial_cosmology.comoving_distance(z))
         pos = pos.cartesian.xyz
-        pos *= self.cosmo.h  # convert from Mpc to Mpc/h
+        pos *= self.fiducial_cosmology.h  # convert from Mpc to Mpc/h
 
         return pos.value.T
 
@@ -388,6 +418,7 @@ class SurveyCatalogue(BaseCatalogue):
         field: str = None,
         resampler: str = "tsc",
         compensated: bool = True,
+        weights: Optional[np.array] = None,
     ) -> np.array:
         """Get a mesh from the catalogue
 
@@ -418,10 +449,15 @@ class SurveyCatalogue(BaseCatalogue):
         Returns:
             np.array: mesh
         """
+        data_weights = np.ones(len(self.galaxies_pos))
+        if self.galaxies_weights is not None:
+            data_weights *= self.galaxies_weights
+        if weights is not None:
+            data_weights *= weights
         return CatalogMesh(
             data_positions=self.galaxies_pos,
-            data_weights=self.galaxies_weights,
-            randoms_positions=self.randoms_positions,
+            data_weights=data_weights,
+            randoms_positions=self.randoms_pos,
             randoms_weights=self.randoms_weights,
             nmesh=n_mesh,
             resampler=resampler,

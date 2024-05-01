@@ -64,7 +64,11 @@ class DensitySplit(BaseSummary):
             sampling_positions[quantiles_idx == i] for i in range(n_quantiles)
         ]
 
-    def __call__(self, catalogue: Union[SurveyCatalogue, BoxCatalogue]) -> np.array:
+    def __call__(
+        self, 
+        catalogue: Union[SurveyCatalogue, BoxCatalogue],
+        return_dataset: bool = False,
+    ) -> np.array:
         """Given a catalogue, compute the density split statistics
 
         Args:
@@ -79,14 +83,14 @@ class DensitySplit(BaseSummary):
             )
         else:
             random_points = catalogue.randoms_pos
-        density = compute_overdensity(
-            eval_positions = random_points,
-            filter= Gaussian(self.smoothing_radius),
-            tracers_mesh=catalogue.mesh
+        overdensity = compute_overdensity(
+            query_positions=random_points,
+            catalogue=catalogue,
+            smoothing_radius=self.smoothing_radius,
         )
         quantiles = self.get_quantiles(
             sampling_positions=random_points,
-            density=density,
+            density=overdensity,
             n_quantiles=self.n_quantiles,
         )
         cross_correlations = []
@@ -121,6 +125,8 @@ class DensitySplit(BaseSummary):
                     los='z',
                 )(ells=self.ells)
             cross_correlations.append(result(ells=self.ells))
+        if return_dataset:
+            return self.to_dataset(np.array(cross_correlations))
         return np.array(cross_correlations)
 
     def to_dataset(self, summary: np.array)->xr.DataArray:
