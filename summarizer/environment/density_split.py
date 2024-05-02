@@ -2,7 +2,6 @@ import numpy as np
 import xarray as xr
 from typing import List, Union
 from pycorr import TwoPointCorrelationFunction
-from nbodykit.filters import Gaussian
 from pandas import qcut
 
 from summarizer.data import BoxCatalogue, SurveyCatalogue
