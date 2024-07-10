@@ -1,11 +1,11 @@
 import numpy as np
 import xarray as xr
-from typing import List, Union, Optional
+from typing import List, Union
 from summarizer.data import BoxCatalogue, SurveyCatalogue
 from summarizer.base import BaseSummary
-import sys, os
 import PolyBin3D as pb
 
+#TODO: make sure los works as expected
 
 class Bk(BaseSummary):
     def __init__(
@@ -14,8 +14,8 @@ class Bk(BaseSummary):
         n_mesh: int = 360,
         lmax: int = 2,
         mask = None,
-        los:str = 'z',
-        ells: List[int] = (0,2),
+        los:str = 'global',
+        ells: List[int] = [0,2],
     ):
         """
         """
@@ -49,9 +49,9 @@ class Bk(BaseSummary):
         base = pb.PolyBin3D(
             sightline=self.los,
             gridsize=self.n_mesh,
-            boxsize=catalogue.boxsize,
-            boxcenter=0.5*catalogue.boxsize if catalogue.boxsize is not None else None,
-            pixel_window='interlaced-tsc' if not catalogue.is_periodic_box else None,
+            boxsize=catalogue.boxsize, 
+            boxcenter=(0.,0.,0.) if catalogue.boxsize is not None else None,
+            pixel_window='interlaced-tsc' if not catalogue.is_periodic_box else 'tsc',
         )
         bspec = pb.BSpec(
             base, 
@@ -63,7 +63,7 @@ class Bk(BaseSummary):
             include_partial_triangles=False,
         )
         bk_corr = bspec.Bk_ideal(
-            mesh, 
+            galaxies_mesh, 
             discreteness_correction=True,
         )
         k123 = bspec.get_ks()
@@ -85,8 +85,9 @@ class Bk(BaseSummary):
         """
         return xr.DataArray(
             summary,
-            dims=("k"),
+            dims=("ells", "k_index"),
             coords={
-                "k": self.k_bins,
+                "ells": self.ells,
+                "k_index": np.arange(len(summary[0])),
             },
         )

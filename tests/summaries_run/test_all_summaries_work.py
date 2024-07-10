@@ -14,6 +14,16 @@ def catalogue():
         n_mesh=64,
     )
 
+def test_run_bk(catalogue):
+    k_edges = np.arange(0.01,0.10,0.02)
+    bk_runner = Bk(
+        k_bins=k_edges,
+        n_mesh=64,
+    )
+    bk = bk_runner(catalogue=catalogue)
+    bk = bk_runner.to_dataset(bk)
+    assert bk.values.shape == (2, 17)
+  
 def test_run_twopcf(catalogue):
     tpcf_runner = TwoPCF(
         r_bins=np.linspace(0.01, 20., 10),
@@ -24,16 +34,7 @@ def test_run_twopcf(catalogue):
     tpcf = tpcf_runner.to_dataset(tpcf)
     assert tpcf.values.shape == (3, 9)
 
-def test_run_bk(catalogue):
-    k_edges = np.arange(0.01,0.10,0.02)
-    bk_runner = Bk(
-        k_bins=k_edges,
-        n_mesh=64,
-    )
-    bk = bk_runner(catalogue=catalogue)
-    bk = bk_runner.to_dataset(bk)
-    assert bk.values.shape == (2, len(k_edges)-1)
-  
+
 def test_run_pk(catalogue):
     pk_runner = Pk(
         ells=[0,2],
