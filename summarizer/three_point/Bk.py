@@ -45,18 +45,7 @@ class Bk(BaseSummary):
         Returns:
             np.array:
         """
-        if hasattr(catalogue, "mesh"):
-            assert catalogue.mesh.preview().shape == (
-                self.n_mesh,
-                self.n_mesh,
-                self.n_mesh,
-            ), "Mesh has wrong shape!"
-            mesh = catalogue.mesh
-        else:
-            mesh = catalogue.to_mesh(
-                n_mesh=self.n_mesh,
-                resampler="tsc",
-            )
+        galaxies_mesh = catalogue.get_mesh(self.n_mesh)
         base = pb.PolyBin3D(
             sightline=self.los,
             gridsize=self.n_mesh,
