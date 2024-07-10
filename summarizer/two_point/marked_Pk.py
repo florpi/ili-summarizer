@@ -68,13 +68,13 @@ class Mk(BaseSummary):
             np.array: marked power spectrum 
         """
         overdensity = compute_overdensity(
-            query_positions=catalogue.pos,
+            query_positions=catalogue.galaxies_pos,
             catalogue=catalogue,
             smoothing_radius=self.smoothing_radius,
         )
         # get a mesh weighted by the density field
         marked_mesh = catalogue.to_mesh(
-            n_mesh = self.n_grid,
+            n_mesh = self.n_mesh,
             weights=self.get_mark(delta=overdensity),
         )
         if catalogue.is_periodic_box:

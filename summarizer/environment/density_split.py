@@ -100,7 +100,7 @@ class DensitySplit(BaseSummary):
                     edges=(self.r_bins, self.mu_bins),
                     data_positions1=quantiles[i],
                     data_positions2=catalogue.galaxies_pos,
-                    data_weights1=catalogue.weights,
+                    data_weights1=catalogue.galaxies_weights,
                     engine="corrfunc",
                     n_threads=self.n_threads,
                     compute_sepsavg=False,
@@ -115,7 +115,7 @@ class DensitySplit(BaseSummary):
                     edges=(self.r_bins, self.mu_bins),
                     data_positions1=quantiles[i],
                     data_positions2=catalogue.galaxies_pos,
-                    data_weights1=catalogue.weights,
+                    data_weights1=catalogue.galaxies_weights,
                     randoms_positions1=catalogue.randoms_pos,
                     randoms_positions2=catalogue.randoms_pos,
                     engine="corrfunc",
@@ -123,7 +123,7 @@ class DensitySplit(BaseSummary):
                     boxsize=catalogue.boxsize,
                     los='z',
                 )(ells=self.ells)
-            cross_correlations.append(result(ells=self.ells))
+            cross_correlations.append(result)
         if return_dataset:
             return self.to_dataset(np.array(cross_correlations))
         return np.array(cross_correlations)

@@ -1,17 +1,14 @@
 import pytest
 import numpy as np
-from summarizer.data import Catalogue
-from summarizer import TwoPCF, Pk, Mk, DensitySplit, CiC, Bk, WST
+from summarizer.data import BoxCatalogue
+from summarizer import TwoPCF, Pk, Mk, DensitySplit, CiC, WST, Bk
 
 
 @pytest.fixture
 def catalogue():
-    return Catalogue(
-        pos=np.random.uniform(0, 1000, (500, 3)), 
-        vel=np.random.uniform(0, 1000, (500, 3)), 
-        mass= np.random.random(500),
+    return BoxCatalogue(
+        galaxies_pos=np.random.uniform(0, 1000, (100, 3)), 
         redshift=None,
-        cosmo_dict=None,
         name='test',
         boxsize=1000.,
         n_mesh=64,
@@ -27,21 +24,30 @@ def test_run_twopcf(catalogue):
     tpcf = tpcf_runner.to_dataset(tpcf)
     assert tpcf.values.shape == (3, 9)
 
+def test_run_bk(catalogue):
+    k_edges = np.arange(0.01,0.10,0.02)
+    bk_runner = Bk(
+        k_bins=k_edges,
+        n_mesh=64,
+    )
+    bk = bk_runner(catalogue=catalogue)
+    bk = bk_runner.to_dataset(bk)
+    assert bk.values.shape == (2, len(k_edges)-1)
+  
 def test_run_pk(catalogue):
     pk_runner = Pk(
         ells=[0,2],
-        dk=0.005,
-        n_grid=64,    
+        n_mesh=64,    
     )
     pk = pk_runner(catalogue=catalogue)
     pk = pk_runner.to_dataset(pk)
-    assert pk.values.shape == (2, 40)
+    assert pk.values.shape == (2, 855)
 
 def test_run_Mk(catalogue):
     mk_runner = Mk(ells=[0,2])
     mk = mk_runner(catalogue=catalogue)
     mk = mk_runner.to_dataset(mk)
-    assert mk.values.shape == (2, 226)
+    assert mk.values.shape == (2, 27003)
 
 def test_run_density_split(catalogue):
     ds_runner = DensitySplit(
@@ -64,19 +70,6 @@ def test_run_cic(catalogue):
     cic = cic_runner.to_dataset(cic)
     assert cic.values.shape == (15, 10)  
 
-
-def test_run_bk(catalogue):
-    bk_runner = Bk(
-        n_grid=64,
-        BoxSize = catalogue.boxsize,
-        kmin = 0.01,  
-        kmax = 1.,
-        dk = 0.05
-    )
-    bk = bk_runner(catalogue=catalogue)
-    bk = bk_runner.to_dataset(bk)
-    assert bk.values.shape == (19,)
-  
 def test_run_wst(catalogue):
     wst_runner = WST()
     wst = wst_runner(catalogue=catalogue)

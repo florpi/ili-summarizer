@@ -1,5 +1,7 @@
 # Try importing backends. If they work, import their dependent module.
 # Current backends: nbodykit, pycorr, jax, kymatio
+from .two_point import TwoPCF, Pk, Mk
+from .environment import DensitySplit
 notfound = []
 try:
     import jax, jaxlib
@@ -16,9 +18,18 @@ except ModuleNotFoundError:
 
 try:
     import kymatio
+    import torch
     from .wavelet import WST
 except ModuleNotFoundError:
-    notfound.append('kymatio')
+    notfound.append('kymatio or torch')
+
+try:
+    import PolyBin3D
+    from .three_point import Bk
+except ModuleNotFoundError:
+    notfound.append('PolyBin3D')
+
+
 
 if len(notfound)>0:
     import warnings
