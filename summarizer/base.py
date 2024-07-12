@@ -1,12 +1,13 @@
 from abc import ABC, abstractmethod
+from typing import Union
 import xarray as xr
 import numpy as np
-from summarizer.data import Catalogue
+from summarizer.data import BoxCatalogue, SurveyCatalogue
 
 
 class BaseSummary(ABC):
     @abstractmethod
-    def __call__(self, catalogue: Catalogue) -> np.array:
+    def __call__(self, catalogue: Union[BoxCatalogue,SurveyCatalogue]) -> np.array:
         """Given a catalogue, produce a summary
 
         Args:

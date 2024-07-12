@@ -2,10 +2,9 @@ import numpy as np
 import xarray as xr
 from typing import List, Union
 from pycorr import TwoPointCorrelationFunction
-from nbodykit.filters import Gaussian
 from pandas import qcut
 
-from summarizer.data import Catalogue
+from summarizer.data import BoxCatalogue, SurveyCatalogue
 from summarizer.base import BaseSummary
 from summarizer.utils import compute_overdensity
 
@@ -64,7 +63,11 @@ class DensitySplit(BaseSummary):
             sampling_positions[quantiles_idx == i] for i in range(n_quantiles)
         ]
 
-    def __call__(self, catalogue: Catalogue) -> np.array:
+    def __call__(
+        self, 
+        catalogue: Union[SurveyCatalogue, BoxCatalogue],
+        return_dataset: bool = False,
+    ) -> np.array:
         """Given a catalogue, compute the density split statistics
 
         Args:
@@ -73,34 +76,56 @@ class DensitySplit(BaseSummary):
         Returns:
             np.array: density split statistics
         """
-        random_points = np.random.uniform(
-            0, catalogue.boxsize, (self.n_quantiles * len(catalogue.pos), 3)
-        )
-        density = compute_overdensity(
-            eval_positions = random_points,
-            filter= Gaussian(self.smoothing_radius),
-            tracers_mesh=catalogue.mesh
+        if catalogue.is_periodic_box:
+            random_points = np.random.uniform(
+                0, catalogue.boxsize, (self.n_quantiles * len(catalogue), 3)
+            )
+        else:
+            random_points = catalogue.randoms_pos
+        overdensity = compute_overdensity(
+            query_positions=random_points,
+            catalogue=catalogue,
+            smoothing_radius=self.smoothing_radius,
         )
         quantiles = self.get_quantiles(
             sampling_positions=random_points,
-            density=density,
+            density=overdensity,
             n_quantiles=self.n_quantiles,
         )
         cross_correlations = []
         for i in range(self.n_quantiles):
-            result = TwoPointCorrelationFunction(
-                "smu",
-                edges=(self.r_bins, self.mu_bins),
-                data_positions1=quantiles[i],
-                data_positions2=catalogue.pos,
-                engine="corrfunc",
-                boxsize=catalogue.boxsize,
-                nthreads=self.n_threads,
-                compute_sepsavg=False,
-                position_type="pos",
-                los='z',
-            )
-            cross_correlations.append(result(ells=self.ells))
+            if catalogue.is_periodic_box:
+                result = TwoPointCorrelationFunction(
+                    "smu",
+                    edges=(self.r_bins, self.mu_bins),
+                    data_positions1=quantiles[i],
+                    data_positions2=catalogue.galaxies_pos,
+                    data_weights1=catalogue.galaxies_weights,
+                    engine="corrfunc",
+                    n_threads=self.n_threads,
+                    compute_sepsavg=False,
+                    position_type='pos',
+                    boxsize=catalogue.boxsize,
+                    los='z',
+                )(ells=self.ells)
+            else:
+                #TODO: Make sure we are doing the right thing with quantiles randoms
+                result = TwoPointCorrelationFunction(
+                    "smu",
+                    edges=(self.r_bins, self.mu_bins),
+                    data_positions1=quantiles[i],
+                    data_positions2=catalogue.galaxies_pos,
+                    data_weights1=catalogue.galaxies_weights,
+                    randoms_positions1=catalogue.randoms_pos,
+                    randoms_positions2=catalogue.randoms_pos,
+                    engine="corrfunc",
+                    n_threads=self.n_threads,
+                    boxsize=catalogue.boxsize,
+                    los='z',
+                )(ells=self.ells)
+            cross_correlations.append(result)
+        if return_dataset:
+            return self.to_dataset(np.array(cross_correlations))
         return np.array(cross_correlations)
 
     def to_dataset(self, summary: np.array)->xr.DataArray:

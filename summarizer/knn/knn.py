@@ -2,7 +2,7 @@ import xarray as xr
 import numpy as np
 from typing import List, Union
 from summarizer.knn.compute_knn import get_CDFkNN
-from summarizer.data import Catalogue
+from summarizer.data import BoxCatalogue, SurveyCatalogue
 from summarizer.base import BaseSummary
 
 class KNN(BaseSummary):
@@ -32,7 +32,7 @@ class KNN(BaseSummary):
     def __str__(self,):
         return 'knn'
 
-    def __call__(self, catalogue: Catalogue) -> np.array:
+    def __call__(self, catalogue: Union[BoxCatalogue, SurveyCatalogue]) -> np.array:
         """ Given a catalogue, compute its knn statistics
 
         Args:
@@ -45,7 +45,7 @@ class KNN(BaseSummary):
         random_pos = catalogue.boxsize*np.random.uniform(size=(len(catalogue), 3))
         return get_CDFkNN(
             r_bins=self.r_bins,
-            pos = catalogue.pos,
+            pos = catalogue.galaxies_pos,
             random_pos = random_pos,
             boxsize=catalogue.boxsize,
             k=self.k,
