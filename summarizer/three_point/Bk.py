@@ -49,7 +49,7 @@ class Bk(BaseSummary):
         base = pb.PolyBin3D(
             sightline=self.los,
             gridsize=self.n_mesh,
-            boxsize=catalogue.boxsize, 
+            boxsize=[catalogue.boxsize, catalogue.boxsize, catalogue.boxsize], 
             boxcenter=(0.,0.,0.) if catalogue.boxsize is not None else None,
             pixel_window='interlaced-tsc' if not catalogue.is_periodic_box else 'tsc',
         )

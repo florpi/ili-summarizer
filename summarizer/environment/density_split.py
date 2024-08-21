@@ -102,7 +102,7 @@ class DensitySplit(BaseSummary):
                     data_positions2=catalogue.galaxies_pos,
                     data_weights1=catalogue.galaxies_weights,
                     engine="corrfunc",
-                    n_threads=self.n_threads,
+                    nthreads=self.n_threads,
                     compute_sepsavg=False,
                     position_type='pos',
                     boxsize=catalogue.boxsize,
@@ -119,7 +119,7 @@ class DensitySplit(BaseSummary):
                     randoms_positions1=catalogue.randoms_pos,
                     randoms_positions2=catalogue.randoms_pos,
                     engine="corrfunc",
-                    n_threads=self.n_threads,
+                    nthreads=self.n_threads,
                     boxsize=catalogue.boxsize,
                     los='z',
                 )(ells=self.ells)
