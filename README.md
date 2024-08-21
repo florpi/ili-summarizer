@@ -1,6 +1,6 @@
 # ili-summarizer
 
-This is a python package which consolidates tools for constructing summary statistics from spectroscopic surveys of the universe's Large-Scale Structure (LSS). It is built to support the [Learning the Universe Implicit Likelihood Inference (LtU-ILI) pipeline](https://github.com/maho3/ltu-ili). 
+This is a python package which consolidates tools for constructing summary statistics from spectroscopic surveys of the universe's Large-Scale Structure (LSS). It is built to support the [Learning the Universe CMASS (ltu-cmass) pipeline](https://github.com/maho3/ltu-cmass). 
 
 ## Fuctionality
 Currently, ili-summarizer supports summary statistic calculation with halo count fields. The available statistics include:
@@ -29,9 +29,9 @@ If you have comments, questions, or feedback, please [write us an issue](https:/
 
 ## Contributors
 Below is a list of contributors to this repository. (Please add your name here!)
+* [Carolina Cuesta-Lazaro](https://github.com/florpi) (MIT)
 * [Matthew Ho](https://github.com/maho3) (IAP)
 * [Deaglan Bartlett](https://github.com/DeaglanBartlett) (IAP)
 
 ## Acknowledgements
 This work was supported by the [Simons Collaboration on "Learning the Universe"](https://www.learning-the-universe.org/).
-
