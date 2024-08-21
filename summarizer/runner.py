@@ -4,7 +4,7 @@ import logging
 import importlib
 from typing import Optional, List, Dict, Callable
 from pathlib import Path
-from summarizer.data import Catalogue
+from summarizer.data.catalogue import BoxCatalogue
 from summarizer.base import BaseSummary
 
 logging.basicConfig(level=logging.INFO)
@@ -115,7 +115,7 @@ class SummaryRunner:
         )(**summarizer_config["args"])
 
     @classmethod
-    def load_catalogue_loader(cls, catalogues_config: Dict) -> List[Catalogue]:
+    def load_catalogue_loader(cls, catalogues_config: Dict) -> List[BoxCatalogue]:
         """load simulated catalogues from config file
 
         Args:
@@ -125,7 +125,7 @@ class SummaryRunner:
             Callable: function that loads the catalogues given an index
         """
         constructor = getattr(
-            Catalogue, f'from_{catalogues_config["simulation_suite"]}'
+            BoxCatalogue, f'from_{catalogues_config["simulation_suite"]}'
         )
         return lambda idx: constructor(idx, **catalogues_config["args"])
 
