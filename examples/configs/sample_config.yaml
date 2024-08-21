@@ -35,16 +35,13 @@ summarizers:
 - module: 'summarizer'
   class: 'Pk'
   args: 
-    n_grid: 360
-    dk: 0.005
+    n_mesh: 360
     ells: [0,2,4]
 
 - module: 'summarizer'
   class: 'Mk'
   args: 
-    n_grid: 360
-    dk: 0.005
-    ells: [0,2,4]
+    n_mesh: 360
 
 
 

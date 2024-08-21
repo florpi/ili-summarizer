@@ -14,6 +14,7 @@ class Pk(BaseSummary):
         ells: List[int] = [0, 2, 4],
         los: str = 'z',
         compensations: str = 'tsc',
+        k_edges: Union[List, np.array] = None,
     ):
         """Compute two point power spectrum (in fourier space),
         using nbodykit
@@ -28,6 +29,7 @@ class Pk(BaseSummary):
         self.ells = ells
         self.los = los 
         self.compensations = compensations
+        self.k_edges = k_edges
 
     def __str__(self,):
         return 'pk'
@@ -49,18 +51,18 @@ class Pk(BaseSummary):
         if catalogue.is_periodic_box:
             power = MeshFFTPower(
                 galaxies_mesh, 
-                edges=None, 
                 ells=self.ells, 
                 los=self.los, 
                 compensations=self.compensations,
+                edges = self.k_edges,
             ).poles
         else:
             power = MeshFFTPower(
                 galaxies_mesh, 
-                edges=None, 
                 ells=self.ells, 
                 los='firstpoint',
                 compensations=self.compensations,
+                edges = self.k_edges,
             ).poles
         if return_dataset:
             return self.to_dataset(power)
