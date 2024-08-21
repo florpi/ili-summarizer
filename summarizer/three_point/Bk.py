@@ -62,6 +62,7 @@ class Bk(BaseSummary):
             k_bins_squeeze = None, 
             include_partial_triangles=False,
         )
+        print('COMPUTING Bk')
         bk_corr = bspec.Bk_ideal(
             galaxies_mesh, 
             discreteness_correction=True,
